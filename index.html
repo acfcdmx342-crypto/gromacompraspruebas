@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Solicitud de Tecnologia</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* {
+  box-sizing:border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  background:#f4f4f4;
+  min-height:100vh;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+  transition: background 0.3s ease;
+}
+.container {
+  width:100%;
+  max-width:380px;
+}
+.login-logo {
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: 100%;
+  height: auto;
+}
+h2 {
+  text-align:center;
+  margin-bottom:20px;
+}
+.card {
+  border: 1px solid #ccc;
+  padding: 20px;
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
+}
+.input-group {
+  position: relative;
+  width: 100%;
+  margin-bottom:15px;
+}
+.input-group input {
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  font-size:16px;
+}
+.input-group i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color:#555;
+}
+button {
+  padding: 12px;
+  width: 100%;
+  cursor: pointer;
+  font-size:16px;
+  border:none;
+  border-radius:4px;
+  background:#007bff;
+  color:white;
+}
+button:hover {
+  opacity:.9;
+}
+.btn-recover {
+  background:#28a745;
+  margin-top:10px;
+}
+
+/* --- MODO OSCURO CSS --- */
+body.dark-mode {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+body.dark-mode .card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+body.dark-mode h2 {
+  color: #fff;
+}
+body.dark-mode .input-group input {
+  background: #3d3d3d;
+  color: #fff;
+  border: 1px solid #555;
+}
+body.dark-mode .input-group i {
+  color: #ccc;
+}
+#darkModeToggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 10000; /* Por encima de todo */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.dark-mode #darkModeToggle {
+  background: #eee;
+  color: #333;
+}
+
+/* --- ESTILOS DEL LOADER --- */
+#loader { 
+  display: none; 
+  position: fixed; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%; 
+  background: rgba(255,255,255,0.9); 
+  z-index: 9999; 
+  justify-content: center; 
+  align-items: center; 
+  flex-direction: column; 
+}
+body.dark-mode #loader {
+  background: rgba(26,26,26,0.95);
+}
+.loader-logo-container {
+  animation: pulse-procomex 1.5s ease-in-out infinite;
+}
+@keyframes pulse-procomex {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+@media (max-width:400px){
+  .card{ padding:15px; }
+  h2{ font-size:20px; }
+}
+</style>
+</head>
+<body>
+
+<button id="darkModeToggle">
+    <i class="fa-solid fa-moon"></i>
+</button>
+
+<div id="loader">
+    <div class="loader-logo-container">
+        <img src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" 
+             alt="Cargando..." style="width: 250px; height: auto;">
+    </div>
+    <div style="margin-top: 20px; font-weight: bold; color: #007bff;">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...
+    </div>
+</div>
+
+<div class="container">
+    <img src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" alt="Logo Procomex" class="login-logo">
+      <h2>REGISTRO DE SOLICITUD DE TECNOLOGIA</h2>
+    <div class="card">
+        <div class="input-group">
+            <input id="loginUser" placeholder="Usuario" oninput="this.value=this.value.toUpperCase().trim()">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <div class="input-group">
+            <input id="loginPass" type="password" placeholder="Contraseña">
+            <i id="toggleBtn" class="fa-solid fa-eye toggle-pass"></i>
+        </div>
+        <button id="btnLogin">Ingresar</button>
+        <button id="btnRecover" class="btn-recover">¿Olvidaste tu contraseña?</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>emailjs.init("0aHlArLgvHrj2Xbk8");</script>
+
+<script>
+    // 1. LÓGICA MODO OSCURO (Síncrona para evitar parpadeos)
+    const btnToggle = document.getElementById('darkModeToggle');
+    const iconDark = btnToggle.querySelector('i');
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        iconDark.classList.replace('fa-moon', 'fa-sun');
+    }
+    btnToggle.onclick = () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        iconDark.classList.toggle('fa-moon', !isDark);
+        iconDark.classList.toggle('fa-sun', isDark);
+    };
+    // 2. CONTROL DEL LOADER
+    const mostrarCargando = () => { document.getElementById("loader").style.display = "flex"; };
+    const ocultarCargando = () => { document.getElementById("loader").style.display = "none"; };
+</script>
+<script type="module">
+    import { database, ref, get } from "./firebase.js";
+    const loginUser = document.getElementById("loginUser");
+    const loginPass = document.getElementById("loginPass");
+    const toggleBtn = document.getElementById("toggleBtn");
+
+    // Mostrar/Ocultar contraseña
+    toggleBtn.onclick = () => {
+        const isPass = loginPass.type === "password";
+        loginPass.type = isPass ? "text" : "password";
+        toggleBtn.classList.toggle("fa-eye");
+        toggleBtn.classList.toggle("fa-eye-slash");
+    };
+    // Login
+    document.getElementById("btnLogin").onclick = async () => {
+        const usuario = loginUser.value.trim().toUpperCase();
+        const pass = loginPass.value.trim();
+        if (!usuario || !pass) return alert("Completa todos los campos");
+        mostrarCargando();
+        try {
+            const snap = await get(ref(database, "usuarios/" + usuario));
+            if (!snap.exists()) {
+                ocultarCargando();
+                return alert("❌ Usuario NO registrado");
+            }
+            const data = snap.val();
+            if (data.contrasena !== pass) {
+                ocultarCargando();
+                return alert("❌ Contraseña incorrecta");
+            }
+            if (data.bloqueado) {
+                ocultarCargando();
+                return alert("❌ Este usuario está desactivado. Contacta a sistemas.");
+            }
+            localStorage.setItem("usuarioLogueado", JSON.stringify({
+                usuario: data.usuario,
+                nombre: data.nombre,
+                puesto: data.puesto.toUpperCase()
+            }));
+            window.location.href = "tecnologia.html";
+        } catch (error) {
+            ocultarCargando();
+            alert("❌ Error de conexión.");
+        }
+    };
+    // Recuperar Contraseña
+    document.getElementById("btnRecover").onclick = async () => {
+        const usuario = prompt("Ingresa tu NOMBRE DE USUARIO para recuperar la contraseña:");
+        if (!usuario) return;
+        mostrarCargando();
+        const userUpper = usuario.trim().toUpperCase();
+        try {
+            const snap = await get(ref(database, "usuarios/" + userUpper));
+            if (!snap.exists()) {
+                ocultarCargando();
+                return alert("❌ El usuario no existe en nuestra base de datos.");
+            }
+            const data = snap.val();
+            if (!data.correo) {
+                ocultarCargando();
+                return alert("❌ El usuario no tiene un correo electrónico registrado.");
+            }
+            const templateParams = {
+                to_name: data.nombre,
+                user_email: data.correo,
+                user_pass: data.contrasena
+            };
+            emailjs.send('default_service', 'template_ub0ksu5', templateParams)
+                .then(() => {
+                    ocultarCargando();
+                    alert("✅ Éxito: Tu contraseña ha sido enviada al correo: " + data.correo);
+                }, (error) => {
+                    ocultarCargando();
+                    alert("❌ Error al enviar el correo.");
+                });
+        } catch (error) {
+            ocultarCargando();
+            alert("❌ Ocurrió un error.");
+        }
+    };
+</script>
+<script>
+  // Seguridad
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+  document.onkeydown = function(e) {
+    if(e.keyCode == 123) return false;
+    if(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) return false;
+    if(e.ctrlKey && e.keyCode == 85) return false;
+  };
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.onkeydown = e => {
+    if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+};
+</script>
+</body>
+</html>

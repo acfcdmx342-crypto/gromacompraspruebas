@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogos Administrativos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --dark: #0f172a; --accent: #38bdf8; --cctv-blue: #0070c0; --cctv-green: #38b050; --tech-purple: #6366f1; }
+        body { background: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        .sidebar { 
+            width: 240px; 
+            min-height: 100vh; 
+            background: var(--dark); 
+            color: white; 
+            position: fixed; 
+            z-index: 1000; 
+            transition: all 0.3s;
+            left: 0;
+        }
+        .sidebar a { color: #94a3b8; text-decoration: none; padding: 12px 20px; display: block; transition: 0.3s; cursor: pointer; font-size: 0.9rem; }
+        .sidebar a:hover { background: #1e293b; color: var(--accent); }
+        .sidebar a.active { color: white; border-left: 4px solid var(--accent); background: #1e293b; }
+        .main-content { 
+            margin-left: 240px; 
+            padding: 20px; 
+            transition: all 0.3s;
+        }
+        body.hide-menu .sidebar { display: none !important; }
+        body.hide-menu .main-content { margin-left: 0 !important; }
+        body.hide-menu .btn-toggle { display: none !important; }
+        @media (max-width: 768px) {
+            .sidebar { left: -240px; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0; }
+            .main-content.shifted { margin-left: 0; filter: blur(2px); pointer-events: none; }
+        }
+        .table-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 300px; }
+        th { font-size: 0.7rem; color: #64748b; text-transform: uppercase; text-align: center; background: #f8fafc !important; }
+        td { vertical-align: middle; text-align: center; font-size: 0.85rem; }
+        input[type="text"], input[type="email"], select, textarea { text-transform: uppercase; }
+        .cctv-header { background: var(--cctv-blue); color: white; font-weight: bold; padding: 5px 15px; margin-bottom: 10px; border-radius: 4px; }
+        .tech-header { background: var(--tech-purple); color: white; font-weight: bold; padding: 5px 15px; margin-bottom: 10px; border-radius: 4px; }
+        .cctv-green-header { background: var(--cctv-green); color: white; font-weight: bold; padding: 5px 15px; margin-top: 15px; }
+        .cctv-label { background: #e9ecef; font-weight: bold; font-size: 0.75rem; border: 1px solid #dee2e6; padding: 4px 8px; }
+        .cctv-input { border: 1px solid #dee2e6; padding: 4px 8px; font-size: 0.8rem; width: 100%; }
+        .item-box { border: 1px solid #dee2e6; padding: 10px; background: #fff; height: 100%; position: relative; border-radius: 4px; }
+        .signature-line { border-top: 1px solid #000; margin-top: 40px; font-size: 0.7rem; text-align: center; }
+        .btn-toggle { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1001; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        @media (max-width: 768px) { .btn-toggle { display: block; } }
+        
+        .pdf-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .pdf-actions { display: flex; gap: 8px; }
+        .btn-print { background-color: #212529; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer;}
+        .btn-back { background-color: #dc3545; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer;}
+        .btn-print:hover, .btn-back:hover { opacity: 0.8; transform: scale(1.05); }
+
+        .btn-remove-item { border: none; background: transparent; color: #dc3545; padding: 0; line-height: 1; transition: 0.2s; }
+        .btn-remove-item:hover { transform: scale(1.2); }
+
+        @media print {
+            .no-print { display: none !important; }
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0 !important; padding: 0 !important; }
+            .table-container { box-shadow: none !important; border: none !important; }
+            #capture-area { border: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="btn btn-dark btn-toggle" onclick="toggleSidebar()"><i class="bi bi-list fs-4"></i></button>
+
+<div class="sidebar" id="sidebar">
+    <div class="text-center py-4 border-bottom border-secondary mb-2"><h6 class="mb-0 fw-bold text-white">CATÁLOGOS</h6></div>
+    <a onclick="render('matriz')" id="link-matriz"><i class="bi bi-hdd-network me-2"></i> Matriz Tecnología</a>
+    <a onclick="render('matrizcctv')" id="link-matrizcctv"><i class="bi bi-camera-video me-2"></i> Matriz de CCTV</a>
+    <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
+    <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
+    <a onclick="render('sucursales')" id="link-sucursales"><i class="bi bi-shop me-2"></i> Sucursales</a>
+    <a onclick="render('usuarios')" id="link-usuarios"><i class="bi bi-person-lines-fill me-2"></i> Usuarios</a>
+    <div class="text-center py-2 border-top border-secondary mt-2"><h6 class="mb-0 fw-bold text-white small">FORMATOS</h6></div>
+    <a onclick="render('formato_cctv')" id="link-formato_cctv"><i class="bi bi-file-earmark-text me-2"></i> Formato CCTV</a>
+    <a onclick="render('formato_tech')" id="link-formato_tech"><i class="bi bi-laptop me-2"></i> Formato Tecnología</a>
+</div>
+
+<div class="main-content" id="main-content">
+    <div id="view" class="table-container">
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-cloud-check display-1"></i>
+            <h4 class="mt-3">Bienvenido al Sistema</h4>
+            <p>Selecciona un módulo en el menú lateral.</p>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalApp" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="mTitle">Registro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="fID">
+                <div class="row">
+                    <div id="secEmpresa" class="col-md-6 mb-3 d-none">
+                        <label class="form-label fw-bold small">Empresa</label>
+                        <select id="fEmp" class="form-select"></select>
+                    </div>
+                    <div id="secZona" class="col-md-6 mb-3 d-none">
+                        <label class="form-label fw-bold small">Zona</label>
+                        <select id="fZona" class="form-select"></select>
+                    </div>
+                    <div id="secMatriz" class="d-none row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold small">Artículos</label><input type="text" id="mArt" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Modelo</label><input type="text" id="mMod" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Descripción</label><input type="text" id="mDes" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Marca</label><input type="text" id="mMar" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Cantidad</label><input type="number" id="mCant" class="form-control"></div>
+                    </div>
+                    <div id="secUsuarios" class="d-none row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold small">Departamento</label><input type="text" id="uDep" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Puesto</label><input type="text" id="uPue" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Usuario Acceso</label><input type="text" id="uUsu" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold small">Contraseña</label><input type="password" id="uPass" class="form-control"></div>
+                    </div>
+                    <div id="secIndividual" class="col-12 mt-3">
+                        <label class="form-label fw-bold small" id="lblNom">Nombre / Descripción</label>
+                        <input type="text" id="fNom" class="form-control">
+                    </div>
+                    <div id="secMasivo" class="col-12 d-none mt-3">
+                        <textarea id="fMasivo" class="form-control" rows="5" placeholder="Uno por línea o CSV para matriz (Art, Mod, Des, Mar, Cant)"></textarea>
+                    </div>
+                    <div id="secToggleMasivo" class="col-12 form-check form-switch d-none mt-3 ms-3">
+                        <input class="form-check-input" type="checkbox" id="checkMasivo">
+                        <label class="form-check-label small fw-bold" for="checkMasivo">Activar Carga Masiva</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button class="btn btn-primary w-100" id="btnSave">Guardar Información</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    
+    const config = { databaseURL: "https://mydbu-fbc33-default-rtdb.firebaseio.com/" };
+    const db = getDatabase(initializeApp(config));
+    let store = { matriz: {}, matrizcctv: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {} };
+    let currentPath = '';
+    let loadsPending = Object.keys(store).length;
+
+    Object.keys(store).forEach(path => {
+        onValue(ref(db, path), (s) => {
+            store[path] = s.val() || {};
+            if (loadsPending > 0) loadsPending--;
+            if (loadsPending === 0) {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('tipo') === 'cctv' && currentPath === '') {
+                    document.body.classList.add('hide-menu');
+                    render('formato_cctv');
+                } else if (currentPath === path) {
+                    render(path);
+                }
+            }
+        });
+    });
+
+    window.render = (path) => {
+        currentPath = path;
+        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+        document.getElementById(`link-${path}`)?.classList.add('active');
+        
+        if (path === 'formato_cctv') { renderFormato('CCTV'); return; }
+        if (path === 'formato_tech') { renderFormato('TECH'); return; }
+        
+        const items = store[path];
+        const keys = Object.keys(items);
+        let html = `<div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold m-0">${path.toUpperCase()}</h4>
+                        <button class="btn btn-dark" onclick="showModal('${path}')"><i class="bi bi-plus-lg"></i> Nuevo</button>
+                    </div>`;
+        
+        if (keys.length === 0) {
+            html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
+        } else {
+            html += `<div class="table-responsive"><table class="table table-hover border">
+                <thead><tr>
+                    ${['usuarios','sucursales','zonas'].includes(path) ? '<th>Empresa</th>' : ''}
+                    ${['usuarios','sucursales'].includes(path) ? '<th>Zona</th>' : ''}
+                    ${path.includes('matriz') ? '<th>Artículos</th><th>Modelo</th><th>Descripción</th><th>Marca</th><th>Cant.</th>' : '<th class="text-start">Nombre</th>'}
+                    <th class="text-end">Acciones</th>
+                </tr></thead><tbody>`;
+            keys.forEach(id => {
+                const r = items[id];
+                html += `<tr>
+                    ${['usuarios','sucursales','zonas'].includes(path) ? `<td><small>${r.empresa || '-'}</small></td>` : ''}
+                    ${['usuarios','sucursales'].includes(path) ? `<td><small>${r.zona || '-'}</small></td>` : ''}
+                    ${path.includes('matriz') ? 
+                        `<td class="text-start fw-bold">${r.articulos || '-'}</td><td>${r.modelo || '-'}</td><td><small>${r.descripcion || '-'}</small></td><td>${r.marca || '-'}</td><td>${r.cantidad || '-'}</td>` : 
+                        `<td class="text-start">${r.nombre}</td>`
+                    }
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+        }
+        document.getElementById("view").innerHTML = html;
+    };
+
+    function renderFormato(tipo) {
+        const isCctv = tipo === 'CCTV';
+        const storeKey = isCctv ? 'matrizcctv' : 'matriz';
+        const title = isCctv ? 'Requisición de CCTV' : 'Requisición de Tecnología';
+        const colorVar = isCctv ? '--cctv-blue' : '--tech-purple';
+        
+        const today = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const urlParams = new URLSearchParams(window.location.search);
+        const nURL = urlParams.get('n')?.toUpperCase() || "";
+        const pURL = urlParams.get('p')?.toUpperCase() || "";
+        
+        const usuariosArr = Object.values(store.usuarios);
+        const usuarioEncontrado = usuariosArr.find(u => 
+            (u.nombre && u.nombre.toUpperCase() === nURL) || 
+            (u.usuario && u.usuario.toUpperCase() === nURL)
+        );
+
+        const fNombre = usuarioEncontrado?.nombre || (nURL !== "NOMBRE" && nURL !== "" ? nURL : "SOPORTE");
+        const fPuesto = usuarioEncontrado?.puesto || (pURL !== "PUESTO" && pURL !== "" ? pURL : "TECNICO");
+
+        const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+        const arts = Object.values(store[storeKey]).map(m => m.articulos).filter((v, i, a) => a.indexOf(v) === i).sort();
+
+        let html = `
+            <div id="capture-area" class="p-4" style="width: 100%; max-width: 900px; margin: auto; background: white; border: 1px solid #ccc;">
+                <div class="pdf-header-container">
+                    <div style="flex-grow: 1;">
+                        <h3 class="fw-bold m-0" style="color: var(${colorVar})">${title}</h3>
+                    </div>
+                    <div class="pdf-actions no-print">
+                        <button class="btn-print" onclick="window.print()" title="Imprimir Formato">
+                            <i class="bi bi-printer-fill fs-5"></i>
+                        </button>
+                        <button class="btn-back" onclick="window.location.href='tecnologia.html'" title="Regresar">
+                            <i class="bi bi-arrow-left-circle-fill fs-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="${isCctv ? 'cctv-header' : 'tech-header'}">Datos del Solicitante</div>
+                <div class="row g-0 mb-4 border">
+                    <div class="col-md-7 border-end">
+                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Nombre:</div><input type="text" class="cctv-input" value="${fNombre}" readonly></div>
+                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Puesto:</div><input type="text" class="cctv-input" value="${fPuesto}" readonly></div>
+                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Empresa:</div>
+                            <select class="cctv-input" id="form-empresa-select" onchange="window.updateFormZonas(this.value)">
+                                <option value="">SELECCIONE...</option>
+                                ${emps.map(e => `<option value="${e}">${e}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Fecha:</div><div class="cctv-input bg-light">${today}</div></div>
+                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Zona:</div><select class="cctv-input" id="form-zona-select" onchange="window.updateFormSucursales(this.value)"><option value="">ZONA</option></select></div>
+                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Sucursal:</div><select class="form-select cctv-input" id="form-sucursal-select"><option value="">SUCURSAL</option></select></div>
+                    </div>
+                </div>
+                <div class="${isCctv ? 'cctv-header' : 'tech-header'}">Requerimiento de equipo</div>
+                <div class="row g-2 row-cols-1 row-cols-md-2 row-cols-lg-3" id="items-container">
+                    ${Array.from({length: 6}, (_, i) => generateItemHTML(i + 1, arts, storeKey)).join('')}
+                </div>
+                <div class="text-center mt-3 no-print">
+                    <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="window.addNewItem('${storeKey}')"><i class="bi bi-plus-circle me-2"></i>Añadir más artículos</button>
+                </div>
+                <div class="mt-4 border p-2">
+                    <label class="small fw-bold">Observaciones adicionales o artículos no listados:</label>
+                    <textarea class="form-control mt-1" rows="2"></textarea>
+                </div>
+                <div class="cctv-green-header">Diagnóstico Realizado por Soporte en Zona</div>
+                <div class="border p-3">
+                    <div class="row mb-3">
+                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Zona:</span><input type="text" class="border-bottom border-0 w-100" id="diag-zona-display" readonly></div>
+                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Responsable:</span><input type="text" class="border-bottom border-0 w-100" value="${fNombre}" readonly></div>
+                    </div>
+                    <textarea class="form-control" rows="3" placeholder="Comentarios..."></textarea>
+                </div>
+                <div class="row mt-5">
+                    <div class="col-4"><div class="signature-line"><strong>SOLICITA</strong><br>${fNombre}</div></div>
+                    <div class="col-4"><div class="signature-line"><strong>REVISA</strong><br>Coordinador de Soporte</div></div>
+                    <div class="col-4"><div class="signature-line"><strong>AUTORIZA</strong><br>Gerente de Sistemas</div></div>
+                </div>
+            </div>`;
+        document.getElementById("view").innerHTML = html;
+    }
+
+    function generateItemHTML(i, articulos, storeKey) {
+        return `<div class="col item-row" id="row-${i}"><div class="item-box">
+            <div class="d-flex mb-2 align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <span class="small fw-bold label-index me-2" style="font-size: 0.8rem">Cant. art. ${i}:</span>
+                    <input type="number" class="form-control form-control-sm" style="width: 60px" placeholder="0">
+                </div>
+                <button class="btn-remove-item no-print" onclick="window.removeItem('row-${i}')" title="Eliminar item">
+                    <i class="bi bi-trash fs-6"></i>
+                </button>
+            </div>
+            <div class="bg-dark text-white text-center small py-1 mb-2" style="font-size: 0.75rem; font-weight: bold;">Seleccionar artículo:</div>
+            <select class="form-select form-select-sm mb-1 select-art" onchange="window.fillProductData(this, '${i}', '${storeKey}')" style="font-size: 0.8rem">
+                <option value="">SELECCIONE...</option>
+                ${articulos.map(art => `<option value="${art}">${art}</option>`).join('')}
+            </select>
+            <input type="text" id="mod-${i}" class="form-control form-control-sm mb-1 input-mod" placeholder="MODELO" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
+            <input type="text" id="bottom-des-${i}" class="form-control form-control-sm mb-1 input-des" placeholder="DESCRIPCIÓN" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
+            <input type="text" id="mar-${i}" class="form-control form-control-sm input-mar" placeholder="MARCA" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
+        </div></div>`;
+    }
+
+    window.removeItem = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.remove();
+            const container = document.getElementById('items-container');
+            const rows = container.querySelectorAll('.item-row');
+            
+            rows.forEach((row, index) => {
+                const newIdx = index + 1;
+                row.id = `row-${newIdx}`;
+                
+                const label = row.querySelector('.label-index');
+                if(label) label.innerText = `Cant. art. ${newIdx}:`;
+                
+                const sel = row.querySelector('.select-art');
+                const oldOnchange = sel.getAttribute('onchange');
+                const storeKey = oldOnchange.match(/'([^']+)'\)$/)[1];
+                sel.setAttribute('onchange', `window.fillProductData(this, '${newIdx}', '${storeKey}')`);
+                
+                row.querySelector('.input-mod').id = `mod-${newIdx}`;
+                row.querySelector('.input-des').id = `bottom-des-${newIdx}`;
+                row.querySelector('.input-mar').id = `mar-${newIdx}`;
+                
+                const removeBtn = row.querySelector('.btn-remove-item');
+                removeBtn.setAttribute('onclick', `window.removeItem('row-${newIdx}')`);
+            });
+        }
+    };
+
+    window.addNewItem = (storeKey) => {
+        const container = document.getElementById('items-container');
+        const nextId = container.querySelectorAll('.item-row').length + 1;
+        const arts = Object.values(store[storeKey]).map(m => m.articulos).filter((v, i, a) => a.indexOf(v) === i).sort();
+        const temp = document.createElement('div');
+        temp.className = "col item-row";
+        temp.id = `row-${nextId}`;
+        temp.innerHTML = generateItemHTML(nextId, arts, storeKey);
+        container.appendChild(temp);
+    };
+
+    window.fillProductData = (sel, idx, storeKey) => {
+        const p = Object.values(store[storeKey]).find(m => m.articulos === sel.value);
+        document.getElementById(`mod-${idx}`).value = p?.modelo || "";
+        document.getElementById(`bottom-des-${idx}`).value = p?.descripcion || "";
+        document.getElementById(`mar-${idx}`).value = p?.marca || "";
+    };
+
+    window.updateFormZonas = (emp) => {
+        const zs = Object.values(store.zonas).filter(z => z.empresa === emp).map(z => z.nombre).sort();
+        const sel = document.getElementById("form-zona-select");
+        if(sel) {
+            sel.innerHTML = '<option value="">ZONA</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
+            document.getElementById("form-sucursal-select").innerHTML = '<option value="">SUCURSAL</option>';
+        }
+    };
+
+    window.updateFormSucursales = (z) => {
+        const ss = Object.values(store.sucursales).filter(s => s.zona === z).map(s => s.nombre).sort();
+        const sel = document.getElementById("form-sucursal-select");
+        if(sel) {
+            sel.innerHTML = '<option value="">SUCURSAL</option>' + ss.map(s => `<option value="${s}">${s}</option>`).join('');
+            const diag = document.getElementById("diag-zona-display");
+            if(diag) diag.value = z;
+        }
+    };
+
+    window.showModal = (path, id = "") => {
+        const item = id ? store[path][id] : {};
+        document.getElementById("fID").value = id;
+        document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + path.toUpperCase();
+        
+        ['secEmpresa', 'secZona', 'secUsuarios', 'secMatriz', 'secMasivo', 'secToggleMasivo'].forEach(s => document.getElementById(s).classList.add('d-none'));
+        document.getElementById("secIndividual").classList.remove('d-none');
+        document.getElementById("checkMasivo").checked = false;
+
+        if (path.includes('matriz')) {
+            document.getElementById("secIndividual").classList.add('d-none');
+            document.getElementById("secMatriz").classList.remove('d-none');
+            document.getElementById("mArt").value = item.articulos || "";
+            document.getElementById("mMod").value = item.modelo || "";
+            document.getElementById("mDes").value = item.descripcion || "";
+            document.getElementById("mMar").value = item.marca || "";
+            document.getElementById("mCant").value = item.cantidad || "";
+        }
+        if (['zonas', 'sucursales', 'usuarios'].includes(path)) {
+            document.getElementById("secEmpresa").classList.remove('d-none');
+            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+            const fEmp = document.getElementById("fEmp");
+            fEmp.innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
+            
+            if(item.empresa) {
+               const zs = Object.values(store.zonas).filter(z => z.empresa === item.empresa).map(z => z.nombre).sort();
+               document.getElementById("secZona").classList.remove('d-none');
+               document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}" ${item.zona === z ? 'selected' : ''}>${z}</option>`).join('');
+            }
+        }
+        if (path === 'usuarios') {
+            document.getElementById("secUsuarios").classList.remove('d-none');
+            document.getElementById("uDep").value = item.departamento || "";
+            document.getElementById("uPue").value = item.puesto || "";
+            document.getElementById("uUsu").value = item.usuario || "";
+            document.getElementById("uPass").value = item.pass || "";
+        }
+        document.getElementById("fNom").value = item.nombre || "";
+        if (!id) document.getElementById("secToggleMasivo").classList.remove('d-none');
+        
+        document.getElementById("fEmp").onchange = (e) => {
+            if(['sucursales', 'usuarios'].includes(path)){
+                const zs = Object.values(store.zonas).filter(z => z.empresa === e.target.value).map(z => z.nombre).sort();
+                document.getElementById("secZona").classList.remove('d-none');
+                document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}">${z}</option>`).join('');
+            }
+        };
+
+        new bootstrap.Modal(document.getElementById("modalApp")).show();
+    };
+
+    document.getElementById("btnSave").onclick = async () => {
+        const id = document.getElementById("fID").value;
+        const isM = document.getElementById("checkMasivo").checked;
+        let data = {};
+
+        if (currentPath.includes('matriz')) {
+            data = { 
+                articulos: document.getElementById("mArt").value.toUpperCase(), 
+                modelo: document.getElementById("mMod").value.toUpperCase(), 
+                descripcion: document.getElementById("mDes").value.toUpperCase(), 
+                marca: document.getElementById("mMar").value.toUpperCase(),
+                cantidad: document.getElementById("mCant").value
+            };
+        } else {
+            data.nombre = document.getElementById("fNom").value.toUpperCase();
+        }
+
+        if (['zonas', 'sucursales', 'usuarios'].includes(currentPath)) data.empresa = document.getElementById("fEmp").value;
+        if (['sucursales', 'usuarios'].includes(currentPath)) data.zona = document.getElementById("fZona").value;
+        
+        if (currentPath === 'usuarios') {
+            data.departamento = document.getElementById("uDep").value.toUpperCase();
+            data.puesto = document.getElementById("uPue").value.toUpperCase();
+            data.usuario = document.getElementById("uUsu").value;
+            data.pass = document.getElementById("uPass").value;
+        }
+
+        try {
+            if (isM) {
+                const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
+                for (let l of lineas) {
+                    let d = { ...data };
+                    if (currentPath.includes('matriz')) {
+                        const p = l.split(',').map(x => x.trim().toUpperCase());
+                        d = { articulos: p[0], modelo: p[1]||"", descripcion: p[2]||"", marca: p[3]||"", cantidad: p[4]||"", ...data };
+                    } else { d.nombre = l.trim().toUpperCase(); }
+                    await push(ref(db, currentPath), d);
+                }
+            } else {
+                id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
+            }
+            bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
+            Swal.fire({ icon: "success", title: "Guardado", timer: 800, showConfirmButton: false });
+        } catch (e) { Swal.fire("Error", e.message, "error"); }
+    };
+
+    window.del = async (p, id) => {
+        const res = await Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true });
+        if (res.isConfirmed) await remove(ref(db, `${p}/${id}`));
+    };
+
+    window.toggleSidebar = () => {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('main-content').classList.toggle('shifted');
+    };
+
+    document.getElementById("checkMasivo").onchange = (e) => {
+        document.getElementById(currentPath.includes('matriz') ? "secMatriz" : "secIndividual").classList.toggle('d-none', e.target.checked);
+        if (currentPath === 'usuarios') document.getElementById("secUsuarios").classList.toggle('d-none', e.target.checked);
+        document.getElementById("secMasivo").classList.toggle('d-none', !e.target.checked);
+    };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.onkeydown = e => {
+        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+    };
+</script>
+</body>
+</html>
