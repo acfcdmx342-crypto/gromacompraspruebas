@@ -113,9 +113,9 @@
                 <div class="input-group">
                     <input id="archivo" type="file" class="form-control" onchange="previewArchivo(this)">
                     <div class="input-group-text">
-                        <input class="form-check-input" type="checkbox" id="checkLocal">
+                        <input class="form-check-input" type="radio" id="checkLocal">
                         <label class="form-check-label small fw-bold ms-2" for="checkLocal">Local</label>
-                        <input class="form-check-input" type="checkbox" id="checkCenter">
+                        <input class="form-check-input" type="radio" id="checkCenter">
                         <label class="form-check-label small fw-bold ms-2" for="checkCenter">Color Center</label>
                 </div>
                 </div>
@@ -623,8 +623,9 @@ window.exportarExcel = async () => {
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
-        const local = document.getElementById("checkLocal").checked;
-        const center = document.getElementById("checkCenter").checked;
+        const tipo = document.querySelector('input[name="tipoSolicitud"]:checked').value;
+const esLocal = tipo === "LOCAL" || tipo === "COLOR_CENTER";
+const esCenter = tipo === "COLOR_CENTER";
         if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
         document.getElementById("loader").style.display = "flex";
         const snap = await get(solicitudesRef);
@@ -645,10 +646,10 @@ window.exportarExcel = async () => {
                 puesto: window.puestoSesion,
                 archivoData: reader.result, 
                 status: local ? "EN COTIZACION" : "PENDIENTE", 
-                solicitudLocal: local, 
-                isLocal: local,
-                solicitudCenter: center, 
-                isCenter: center,
+                solicitudLocal: eslocal, 
+                isLocal: esLocal,
+                colorCenter: esCenter, 
+                tipo; tipo,
                 fechaISO: new Date().toISOString(),
                 usuario: window.usuarioSesion, 
                 eliminado: false
