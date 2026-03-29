@@ -17,93 +17,157 @@
         .card { border-radius:20px; border: none; transition: background 0.3s ease; }
         .action-btn { cursor:pointer; font-size:22px; transition: 0.2s; display: inline-block; padding: 0 4px; }
         .action-btn:hover { transform: scale(1.2); }
+        .status-badge { font-weight: 600; padding: 8px 15px; border-radius: 30px; }
         #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
         .form-label { font-weight: 600; color: #495057; }
-        .form-control { border-radius: 10px; padding: 10px; }
-        #preview-container { border: 2px dashed #ccc; border-radius: 10px; min-height: 100px; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #fff; margin-top: 10px; }
+        .form-control, .form-select { border-radius: 10px; padding: 12px; border: 1px solid #ced4da; }
+        .user-info-box { background: white; padding: 10px 20px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #preview-container { border: 2px dashed #ccc; border-radius: 10px; min-height: 100px; background: #fff; margin-top: 5px; display: flex; justify-content: center; align-items: center; }
         #preview-container img, #preview-container iframe { width: 100%; height: 150px; object-fit: contain; }
-        body.dark-mode { background: #1a1d21; color: #e9ecef; }
-        body.dark-mode .card, body.dark-mode .navbar { background: #24282d; color: #fff; border: 1px solid #383f45; }
-        body.dark-mode .table { color: #fff; }
+        .cctv-link { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #dc3545; font-weight: bold; transition: 0.3s; }
+        .cctv-link:hover { transform: translateY(-3px); color: #a71d2a; }
+        .cctv-icon-container { width: 60px; height: 60px; background: #fee2e2; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        body.dark-mode { background: #121416 !important; color: #ffffff; }
+        body.dark-mode .card, body.dark-mode .user-info-box, body.dark-mode .modal-content { background: #1d1f21 !important; color: #ffffff !important; border: 1px solid #333; }
+        body.dark-mode .table td, body.dark-mode .table th { background-color: #1d1f21 !important; color: #ffffff !important; border-color: #333; }
+        body.dark-mode .form-control, body.dark-mode .form-select { background-color: #2d3135; color: white; border-color: #444; }
     </style>
 </head>
-<body class="p-3">
-
+<body class="p-4">
 <div id="loader">
-    <img src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" style="width:200px;">
-    <div class="spinner-border text-primary mt-3"></div>
-    <p class="mt-2 fw-bold text-primary">Procesando solicitud...</p>
+    <img src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" style="width:250px;" alt="Logo">
+    <div class="spinner-border text-primary mt-3" role="status"></div>
+    <span class="ms-2 fw-bold text-primary mt-2">Procesando solicitud...</span>
 </div>
 
-<nav class="navbar navbar-expand-lg card shadow-sm mb-4 px-3">
-    <div class="container-fluid">
-        <span class="navbar-brand fw-bold text-primary"><i class="fa-solid fa-microchip me-2"></i>TECNOLOGÍA</span>
-        <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-light shadow-sm" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
-            <div id="userDisplay" class="fw-bold text-secondary px-3 py-1 bg-white rounded-pill shadow-sm">Usuario</div>
-            <button class="btn btn-danger btn-sm rounded-pill" onclick="cerrarSesion()">Salir</button>
-        </div>
-    </div>
-</nav>
-
 <div class="container-fluid">
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="card shadow p-4">
-                <h5 class="fw-bold mb-4 text-secondary"><i class="fa-solid fa-plus-circle me-2"></i>Nueva Solicitud</h5>
-                <form id="formTec">
-                    <div class="mb-3">
-                        <label class="form-label">EMPRESA</label>
-                        <input type="text" id="empresa" class="form-control text-uppercase" placeholder="PROCOMEX" required>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">ZONA / SUCURSAL</label>
-                        <div class="row g-2">
-                            <div class="col-6"><input type="text" id="zona" class="form-control text-uppercase" placeholder="ZONA" required></div>
-                            <div class="col-6"><input type="text" id="sucursal" class="form-control text-uppercase" placeholder="SUCURSAL" required></div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">SOPORTE</label>
-                        <input type="text" id="soporte" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">REQUISICIÓN (PDF/IMG)</label>
-                        <input type="file" id="archivo" class="form-control" accept="image/*,.pdf" onchange="previewArchivo(this)" required>
-                        <div class="mt-2 d-flex gap-2 flex-wrap">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="checkLocal">
-                                <label class="form-check-label small fw-bold">Local</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="colorCenter">
-                                <label class="form-check-label text-primary fw-bold small">Color Center</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="urgente">
-                                <label class="form-check-label text-danger fw-bold small">Urgente</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="preview-container">Vista previa</div>
-                    <button type="button" class="btn btn-primary w-100 py-3 fw-bold shadow mt-3" onclick="guardarSolicitud()">💾 REGISTRAR</button>
-                </form>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="user-info-box border-start border-primary border-4">
+            <div class="fw-bold text-primary">👤 <span id="usuarioActivo">Cargando...</span></div>
+            <div class="text-muted small">Puesto: <span id="puestoActivo">-</span></div>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="btnDarkMode" class="btn btn-light rounded-circle shadow-sm"><i class="fa-solid fa-moon"></i></button>
+            <div class="dropdown">
+                <button class="btn btn-primary btn-rounded dropdown-toggle fw-bold shadow-sm" type="button" data-bs-toggle="dropdown">☰ MENÚ SISTEMA</button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><a class="dropdown-item" href="historial.html"><i class="fa-solid fa-clock-history me-2"></i>Historial General</a></li>
+                    <li><button class="dropdown-item text-success" onclick="exportarExcel()"><i class="fa-solid fa-file-excel me-2"></i>Reporte Excel</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()"><i class="fa-solid fa-door-open me-2"></i>Cerrar Sesión</a></li>
+                </ul>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-8">
-            <div class="card shadow p-4">
-                <h5 class="fw-bold mb-4 text-secondary"><i class="fa-solid fa-list-check me-2"></i>Solicitudes en Proceso</h5>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle text-center">
-                        <thead class="table-light">
-                            <tr>
-                                <th>FOLIO</th><th>SUCURSAL</th><th>TIPO</th><th>ESTATUS</th><th>ACCIONES</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaTecBody"></tbody>
-                    </table>
+    <div class="card shadow p-4 mb-4">
+        <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fa-solid fa-file-signature me-2"></i>NUEVA SOLICITUD DE REQUISICIÓN</h5>
+        <form id="formTec" class="row g-3">
+            <div class="col-md-3">
+                <label class="small fw-bold text-uppercase">Empresa</label>
+                <input type="text" id="empresa" class="form-control text-uppercase" placeholder="EJ: PROCOMEX" required>
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold text-uppercase">Zona</label>
+                <input type="text" id="zona" class="form-control text-uppercase" placeholder="EJ: PACHUCA" required>
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold text-uppercase">Soporte</label>
+                <input type="text" id="soporte" class="form-control" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold text-uppercase">Sucursal</label>
+                <input type="text" id="sucursal" class="form-control text-uppercase" placeholder="EJ: CENTRAL" required>
+            </div>
+            
+            <div class="col-md-6">
+                <label class="small fw-bold text-uppercase">Requisición Escaneada (PDF o Imagen)</label>
+                <div class="input-group">
+                    <input type="file" id="archivo" class="form-control" accept="image/*,.pdf" onchange="previewArchivo(this)" required>
+                    <div class="input-group-text d-flex gap-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="checkLocal">
+                            <label class="form-check-label small fw-bold" for="checkLocal">Local</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="urgente">
+                            <label class="form-check-label text-danger fw-bold small" for="urgente">Urgente</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="colorCenter">
+                            <label class="form-check-label text-primary fw-bold small" for="colorCenter">Color Center</label>
+                        </div>
+                    </div>
                 </div>
+                <div id="preview-container"><small class="text-muted">Vista previa del documento</small></div>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center justify-content-center">
+                <a id="linkCCTV" href="https://tecnologiaprocomex.github.io/PORTAL/mantenimiento.html" class="cctv-link text-center">
+                    <div class="cctv-icon-container"><i class="fa-solid fa-video"></i></div>
+                    <span class="small mt-2">¿Es requisición de CCTV? <br> Haz clic aquí</span>
+                </a>
+            </div>
+
+            <div class="col-12 text-center mt-4">
+                <button type="button" class="btn btn-primary btn-rounded px-5 py-2 fw-bold shadow-sm" onclick="guardarSolicitud()">
+                    <i class="fa-solid fa-save me-2"></i>GUARDAR REGISTRO
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow p-4">
+        <h5 class="fw-bold mb-3 text-secondary"><i class="fa-solid fa-list-check me-2"></i>SOLICITUDES EN PROCESO ACTIVO</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center bg-white shadow-sm">
+                <thead class="table-primary text-uppercase small">
+                    <tr>
+                        <th>Folio</th>
+                        <th>Empresa</th>
+                        <th>Zona</th>
+                        <th>Sucursal</th>
+                        <th>Tipo</th>
+                        <th>Doc</th>
+                        <th>Estatus Actual</th>
+                        <th>Tiempo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaTecBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSegLocal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold">Seguimiento Solicitud Local / Color Center</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalIdKey">
+                <p id="modalInfoFolio" class="fw-bold text-center"></p>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Actualizar Estatus</label>
+                    <select id="modalNuevoStatus" class="form-select">
+                        <option value="EN COTIZACION">EN COTIZACIÓN</option>
+                        <option value="POR AUTORIZAR">POR AUTORIZAR</option>
+                        <option value="COMPRA EN PROCESO">COMPRA EN PROCESO</option>
+                        <option value="EN TRANSITO">EN TRÁNSITO</option>
+                        <option value="ENTREGADO">ENTREGADO (FINALIZAR)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Notas de Seguimiento</label>
+                    <textarea id="modalNota" class="form-control" rows="3" placeholder="Ej: Se envió cotización al gerente..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-info text-white fw-bold" onclick="actualizarSegLocal()">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -112,40 +176,55 @@
 <script type="module">
     import { database, ref, push, onValue, get, remove, update } from "./firebase.js";
 
-    // Manejo de Sesión
-    const sesion = JSON.parse(localStorage.getItem("usuarioLogueado"));
-    if(!sesion) location.href = "index.html";
-    document.getElementById("userDisplay").textContent = sesion.nombre;
+    // --- MANEJO DE SESIÓN ---
+    const sesion = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
+    if(!sesion.usuario) location.href = "index.html";
+
+    document.getElementById("usuarioActivo").textContent = sesion.nombre;
+    document.getElementById("puestoActivo").textContent = sesion.puesto;
     document.getElementById("soporte").value = sesion.nombre;
     window.nombreSesion = sesion.nombre;
+    window.usuarioSesion = sesion.usuario;
+    window.puestoSesion = sesion.puesto;
 
     const solicitudesRef = ref(database, "tecnologia");
+    const historialPermanenteRef = ref(database, "historial_tecnologia");
 
-    // Función Guardar
+    // --- MODO OSCURO ---
+    const btnMode = document.getElementById('btnDarkMode');
+    btnMode.onclick = () => {
+        document.body.classList.toggle('dark-mode');
+        const icon = btnMode.querySelector('i');
+        icon.classList.toggle('fa-moon');
+        icon.classList.toggle('fa-sun');
+    };
+
+    // --- GUARDAR SOLICITUD ---
     window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
-        const fileInput = document.getElementById("archivo").files[0];
+        const arc = document.getElementById("archivo").files[0];
         const isLocal = document.getElementById("checkLocal").checked;
         const isColorCenter = document.getElementById("colorCenter").checked;
+        const isUrgente = document.getElementById("urgente").checked;
 
-        if(!emp || !zon || !suc || !fileInput) {
-            return Swal.fire("Atención", "Por favor completa los campos y sube un archivo", "warning");
-        }
+        if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Completa todos los campos obligatorios", "error");
 
         document.getElementById("loader").style.display = "flex";
 
-        const reader = new FileReader();
-        reader.onload = async () => {
-            try {
-                const snap = await get(solicitudesRef);
-                const num = snap.exists() ? Object.keys(snap.val()).length + 1 : 1;
-                const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${num.toString().padStart(4,'0')}`.toUpperCase();
+        try {
+            const snap = await get(solicitudesRef);
+            const contador = snap.exists() ? Object.keys(snap.val()).length + 1 : 1;
 
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
+                
+                // Determinación del tipo
                 let tipoFinal = "COMPRAS";
-                if(isColorCenter) tipoFinal = "COLOR CENTER";
-                else if(isLocal) tipoFinal = "LOCAL";
+                if (isColorCenter) tipoFinal = "COLOR CENTER";
+                else if (isLocal) tipoFinal = "LOCAL";
 
                 await push(solicitudesRef, {
                     folio: fol,
@@ -155,88 +234,248 @@
                     soporte: window.nombreSesion,
                     archivoData: reader.result,
                     tipo: tipoFinal,
-                    urgente: document.getElementById("urgente").checked,
+                    urgente: isUrgente,
                     status: (isLocal || isColorCenter) ? "EN COTIZACION" : "PENDIENTE",
                     fechaISO: new Date().toISOString(),
+                    usuario: window.usuarioSesion,
                     eliminado: false
                 });
 
                 document.getElementById("formTec").reset();
-                document.getElementById("preview-container").innerHTML = "Vista previa";
+                document.getElementById("preview-container").innerHTML = "";
                 document.getElementById("loader").style.display = "none";
-                Swal.fire("Éxito", "Solicitud guardada con folio: " + fol, "success");
-            } catch (e) {
-                console.error(e);
-                document.getElementById("loader").style.display = "none";
-                Swal.fire("Error", "No se pudo guardar en la base de datos", "error");
-            }
-        };
-        reader.readAsDataURL(fileInput);
+                Swal.fire("Éxito", `Solicitud ${fol} registrada correctamente`, "success");
+            };
+            reader.readAsDataURL(arc);
+        } catch (error) {
+            console.error(error);
+            document.getElementById("loader").style.display = "none";
+        }
     };
 
-    // Escuchar cambios en la tabla
+    // --- RENDERIZADO DE TABLA ---
     onValue(solicitudesRef, (snapshot) => {
         const tbody = document.getElementById("tablaTecBody");
         tbody.innerHTML = "";
-        snapshot.forEach(child => {
-            const s = child.val();
-            if (s.eliminado) return;
+        
+        snapshot.forEach(doc => {
+            const s = doc.val();
+            if(s.eliminado) return;
 
             const badgeColor = s.tipo === 'COLOR CENTER' ? 'bg-primary' : (s.tipo === 'LOCAL' ? 'bg-warning text-dark' : 'bg-secondary');
+            const statusActual = s.status || "PENDIENTE";
             
+            let badgeStatus = "bg-danger";
+            if(statusActual.includes("AUTORIZAR")) badgeStatus = "bg-warning text-dark";
+            if(statusActual.includes("COMPRA") || statusActual.includes("TRANSITO")) badgeStatus = "bg-info text-white";
+            if(statusActual.includes("ENTREGADO")) badgeStatus = "bg-success";
+
+            const horas = Math.floor((new Date() - new Date(s.fechaISO)) / 3600000);
+
             const tr = document.createElement("tr");
             if(s.urgente) tr.classList.add("table-warning");
-            
+
             tr.innerHTML = `
                 <td class="fw-bold">${s.folio}</td>
+                <td>${s.empresa}</td>
+                <td>${s.zona}</td>
                 <td>${s.sucursal}</td>
                 <td><span class="badge ${badgeColor}">${s.tipo}</span></td>
-                <td><span class="badge bg-danger">${s.status}</span></td>
+                <td><button class="btn btn-sm btn-outline-primary" onclick="verPDF('${s.archivoData}', '${s.folio}')"><i class="fa-solid fa-file-pdf"></i></button></td>
+                <td><span class="badge ${badgeStatus} p-2 w-100">${statusActual}</span></td>
+                <td><small class="fw-bold">${horas}h</small></td>
                 <td>
-                    <i class="fa-solid fa-eye text-info action-btn" onclick="verPDF('${s.archivoData}')"></i>
-                    <i class="fa-solid fa-trash text-danger action-btn" onclick="eliminar('${child.key}')"></i>
+                    <div class="d-flex justify-content-center gap-1">
+                        <span class="action-btn" onclick="verHistorial('${s.folio}')">📜</span>
+                        <span class="action-btn text-primary" onclick="editarRegistro('${doc.key}')">✏️</span>
+                        ${window.puestoSesion !== "Soporte Técnico Jr" ? 
+                            `<span class="action-btn text-danger" onclick="rechazarSolicitud('${doc.key}', '${s.folio}')">🗑️</span>` : ''
+                        }
+                        <span class="action-btn text-info" onclick="abrirModalSeg('${doc.key}', '${s.folio}', '${statusActual}')">📋</span>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     });
 
-    // Vista previa de archivo
-    window.previewArchivo = (input) => {
-        const container = document.getElementById("preview-container");
-        if(!input.files[0]) return container.innerHTML = "Vista previa";
-        const reader = new FileReader();
-        reader.onload = e => {
-            container.innerHTML = input.files[0].type.includes("pdf") 
-                ? `<iframe src="${e.target.result}" style="width:100%;height:150px;border:none;"></iframe>` 
-                : `<img src="${e.target.result}">`;
-        };
-        reader.readAsDataURL(input.files[0]);
-    };
-
-    window.verPDF = (base64) => {
+    // --- FUNCIONES DE ACCIÓN ---
+    window.verPDF = (base64, fol) => {
         Swal.fire({
-            title: 'Requisición adjunta',
-            html: `<iframe src="${base64}" style="width:100%; height:450px; border:none;"></iframe>`,
-            width: '850px',
+            title: `Documento - ${fol}`,
+            html: `<iframe src="${base64}" style="width:100%; height:500px; border:none;"></iframe>`,
+            width: '80%',
             confirmButtonText: 'Cerrar'
         });
     };
 
-    window.eliminar = async (key) => {
-        const res = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Esta acción no se puede deshacer",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar'
+    window.verHistorial = async (folio) => {
+        const snap = await get(ref(database, "seguimiento"));
+        let contenido = `<div class="text-start small">`;
+        let found = false;
+        
+        snap.forEach(d => {
+            if(d.val().folio === folio) {
+                found = true;
+                const h = d.val();
+                contenido += `<div class="mb-2 border-bottom pb-1">
+                    <span class="badge bg-secondary">${h.fecha}</span> <b>${h.usuario}:</b> ${h.nota}
+                </div>`;
+            }
         });
-        if(res.isConfirmed) await remove(ref(database, "tecnologia/" + key));
+        contenido += found ? `</div>` : `<p class="text-muted">No hay notas de seguimiento aún.</p></div>`;
+        Swal.fire({ title: `Bitácora ${folio}`, html: contenido });
     };
 
-    window.toggleDarkMode = () => {
-        document.body.classList.toggle('dark-mode');
+    window.abrirModalSeg = (key, fol, status) => {
+        document.getElementById("modalIdKey").value = key;
+        document.getElementById("modalInfoFolio").textContent = fol;
+        document.getElementById("modalNuevoStatus").value = status;
+        document.getElementById("modalNota").value = "";
+        new bootstrap.Modal(document.getElementById('modalSegLocal')).show();
+    };
+
+    window.actualizarSegLocal = async () => {
+        const key = document.getElementById("modalIdKey").value;
+        const fol = document.getElementById("modalInfoFolio").textContent;
+        const nStatus = document.getElementById("modalNuevoStatus").value;
+        const nota = document.getElementById("modalNota").value;
+
+        if(!nota) return Swal.fire("Atención", "Escribe una nota para el historial", "warning");
+
+        document.getElementById("loader").style.display = "flex";
+
+        try {
+            // 1. Actualizar estatus en la solicitud
+            await update(ref(database, `tecnologia/${key}`), { status: nStatus });
+
+            // 2. Guardar en bitácora
+            await push(ref(database, "seguimiento"), {
+                folio: fol,
+                fecha: new Date().toLocaleString(),
+                usuario: window.nombreSesion,
+                nota: nota.toUpperCase(),
+                statusRelacionado: nStatus
+            });
+
+            // 3. Si es entregado, mover a historial permanente
+            if(nStatus === "ENTREGADO") {
+                const snap = await get(ref(database, `tecnologia/${key}`));
+                await push(historialPermanenteRef, {
+                    ...snap.val(),
+                    status: "FINALIZADO / ENTREGADO",
+                    fechaFinal: new Date().toISOString()
+                });
+                await remove(ref(database, `tecnologia/${key}`));
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modalSegLocal')).hide();
+            document.getElementById("loader").style.display = "none";
+            Swal.fire("Actualizado", "Seguimiento guardado correctamente", "success");
+        } catch (e) {
+            console.error(e);
+            document.getElementById("loader").style.display = "none";
+        }
+    };
+
+    window.rechazarSolicitud = async (idKey, fol) => {
+        const { value: motivo } = await Swal.fire({
+            title: `Rechazar Folio ${fol}`,
+            input: 'textarea',
+            inputPlaceholder: 'Indica el motivo del rechazo...',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Confirmar Rechazo'
+        });
+
+        if (motivo) {
+            document.getElementById("loader").style.display = "flex";
+            const snap = await get(ref(database, `tecnologia/${idKey}`));
+            await push(historialPermanenteRef, {
+                ...snap.val(),
+                status: "RECHAZADO",
+                motivoRechazo: motivo.toUpperCase(),
+                fechaCierre: new Date().toISOString(),
+                usuarioFinalizo: window.nombreSesion
+            });
+            await remove(ref(database, `tecnologia/${idKey}`));
+            document.getElementById("loader").style.display = "none";
+            Swal.fire("Rechazado", "El registro se movió al historial", "info");
+        }
+    };
+
+    window.editarRegistro = async (key) => {
+        const snap = await get(ref(database, `tecnologia/${key}`));
+        const d = snap.val();
+
+        const { value: formValues } = await Swal.fire({
+            title: 'Editar Datos Básicos',
+            html:
+                `<input id="swal-sucursal" class="swal2-input" value="${d.sucursal}" placeholder="Sucursal">` +
+                `<input id="swal-zona" class="swal2-input" value="${d.zona}" placeholder="Zona">`,
+            focusConfirm: false,
+            showCancelButton: true,
+            preConfirm: () => [
+                document.getElementById('swal-sucursal').value.toUpperCase(),
+                document.getElementById('swal-zona').value.toUpperCase()
+            ]
+        });
+
+        if (formValues) {
+            await update(ref(database, `tecnologia/${key}`), {
+                sucursal: formValues[0],
+                zona: formValues[1]
+            });
+            Swal.fire("Actualizado", "Los datos han sido modificados", "success");
+        }
+    };
+
+    window.exportarExcel = async () => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Solicitudes Activas');
+        worksheet.columns = [
+            { header: 'Folio', key: 'folio', width: 15 },
+            { header: 'Empresa', key: 'empresa', width: 15 },
+            { header: 'Sucursal', key: 'sucursal', width: 20 },
+            { header: 'Tipo', key: 'tipo', width: 15 },
+            { header: 'Estatus', key: 'status', width: 20 },
+            { header: 'Fecha Registro', key: 'fecha', width: 25 }
+        ];
+
+        const snap = await get(solicitudesRef);
+        snap.forEach(d => {
+            const v = d.val();
+            worksheet.addRow({
+                folio: v.folio,
+                empresa: v.empresa,
+                sucursal: v.sucursal,
+                tipo: v.tipo,
+                status: v.status,
+                fecha: v.fechaISO
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_Tecnologia_${new Date().toLocaleDateString()}.xlsx`;
+        a.click();
+    };
+
+    window.previewArchivo = (input) => {
+        const file = input.files[0];
+        const container = document.getElementById("preview-container");
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                container.innerHTML = file.type.includes("pdf") ? 
+                    `<iframe src="${e.target.result}"></iframe>` : 
+                    `<img src="${e.target.result}">`;
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     window.cerrarSesion = () => { localStorage.clear(); location.href = "index.html"; };
