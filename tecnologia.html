@@ -114,6 +114,10 @@
                         <input class="form-check-input" type="checkbox" id="checkLocal">
                         <label class="form-check-label small fw-bold ms-2" for="checkLocal">Local</label>
                     </div>
+<div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="colorCenter">
+        <label class="form-check-label text-primary fw-bold small" for="colorCenter">Color Center</label>
+    </div>
                 </div>
                 <div id="preview-container"><small class="text-muted">Vista previa</small></div>
             </div>
@@ -589,8 +593,18 @@ window.exportarExcel = async () => {
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
         const local = document.getElementById("checkLocal").checked;
-        if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
-        document.getElementById("loader").style.display = "flex";
+        const isColorCenter = document.getElementById("colorCenter").checked; // Nueva variable
+        // Lógica de Prioridad de Tipo
+    let tipoFinal = "COMPRAS";
+    if (isColorCenter) {
+        tipoFinal = "COLOR CENTER";
+    } else if (isLocal) {
+        tipoFinal = "LOCAL";
+    }
+    // El status será "EN COTIZACION" si es Local O Color Center
+    const statusInicial = (isLocal || isColorCenter) ? "EN COTIZACION" : "PENDIENTE";
+    if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
+     document.getElementById("loader").style.display = "flex";
         const snap = await get(solicitudesRef);
         let contador = 1;
         if (snap.exists()) {
@@ -607,8 +621,11 @@ window.exportarExcel = async () => {
                 soporte: window.nombreSesion, 
                 puesto: window.puestoSesion,
                 archivoData: reader.result, 
+                tipo:tipoFinal
                 status: local ? "EN COTIZACION" : "PENDIENTE", 
-                solicitudLocal: local, 
+                status: colorcenter ? "EN COTIZACION" : "PENDIENTE", 
+                solicitudLocal: local,
+                solicitudLocal: colorcenter,
                 isLocal: local,
                 fechaISO: new Date().toISOString(),
                 usuario: window.usuarioSesion, 
