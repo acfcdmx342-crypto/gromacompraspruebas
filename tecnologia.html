@@ -101,42 +101,34 @@
     </div>
     <div class="card shadow p-4 mb-4">
         <h5 class="fw-bold mb-3 border-bottom pb-2 text-secondary">Nueva Solicitud</h5>
-      <form id="formTec" class="row g-3">
-    <div class="col-md-3"><label class="small fw-bold">Empresa</label><input id="empresa" class="form-control text-uppercase" placeholder="EJ: PROCOMEX"></div>
-    <div class="col-md-3"><label class="small fw-bold">Zona</label><input id="zona" class="form-control text-uppercase" placeholder="EJ: PACHUCA"></div>
-    <div class="col-md-3"><label class="small fw-bold">Soporte</label><input id="soporte" class="form-control text-uppercase" readonly></div>
-    <div class="col-md-3"><label class="small fw-bold">Sucursal</label><input id="sucursal" class="form-control text-uppercase" placeholder="EJ: CENTRAL"></div>
-    <div class="col-md-6">
-        <label class="small fw-bold">Requisición (PDF/Imagen)</label>
-        <div class="input-group">
-            <input id="archivo" type="file" class="form-control" onchange="previewArchivo(this)">
-            <div class="input-group-text d-flex gap-2">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="checkLocal">
-                    <label class="form-check-label small fw-bold" for="checkLocal">Local</label>
+        <form id="formTec" class="row g-3">
+            <div class="col-md-3"><label class="small fw-bold">Empresa</label><input id="empresa" class="form-control text-uppercase" placeholder="EJ: PROCOMEX"></div>
+            <div class="col-md-3"><label class="small fw-bold">Zona</label><input id="zona" class="form-control text-uppercase" placeholder="EJ: PACHUCA"></div>
+            <div class="col-md-3"><label class="small fw-bold">Soporte</label><input id="soporte" class="form-control text-uppercase" readonly></div>
+            <div class="col-md-3"><label class="small fw-bold">Sucursal</label><input id="sucursal" class="form-control text-uppercase" placeholder="EJ: CENTRAL"></div>
+            <div class="col-md-6">
+                <label class="small fw-bold">Requisición (PDF/Imagen)</label>
+                <div class="input-group">
+                    <input id="archivo" type="file" class="form-control" onchange="previewArchivo(this)">
+                    <div class="input-group-text">
+                        <input class="form-check-input" type="checkbox" id="checkLocal">
+                        <label class="form-check-label small fw-bold ms-2" for="checkLocal">Local</label>
+                    </div>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="urgente">
-                    <label class="form-check-label text-danger fw-bold small" for="urgente">Urgente</label>
-                </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="colorCenter">
-                    <label class="form-check-label text-primary fw-bold small" for="colorCenter">Color Center</label>
-                </div>
+                <div id="preview-container"><small class="text-muted">Vista previa</small></div>
             </div>
-        </div>
-        <div id="preview-container"><small class="text-muted">Vista previa</small></div>
-    </div>
-    <div class="col-md-6 d-flex align-items-center justify-content-center">
-        <a id="linkCCTV" href="#" class="cctv-link text-center">
-            <div class="cctv-icon-container"><i class="fa-solid fa-video"></i></div>
-            <span class="small mt-2">Requisición de CCTV</span>
-        </a>
-    </div>
-    <div class="col-12 mt-4 text-center">
-        <button type="button" class="btn btn-primary btn-rounded px-5 shadow" onclick="guardarSolicitud()">💾 Guardar Solicitud</button>
-    </div>
-</form> 
+            <div class="col-md-6 d-flex align-items-center justify-content-center">
+                   <a id="linkCCTV" href="#" class="cctv-link">
+                    <div class="cctv-icon-container">
+                        <i class="fa-solid fa-video"></i>
+                    </div>
+                    <span class="small mt-2">Requisición de CCTV</span>
+                </a>
+                </div>
+            <div class="col-12 mt-4 text-center">
+                <button type="button" class="btn btn-primary btn-rounded px-5 shadow" onclick="guardarSolicitud()">💾 Guardar Solicitud</button>
+            </div>
+        </form>
     </div>
     <div class="card shadow p-4 border-0">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -231,34 +223,15 @@
             if (window.esAdmin || s.usuario === window.usuarioSesion) {
                 const tr = document.createElement("tr");
                 if(esLocal) tr.classList.add("fila-local");
-            const tipoBadge = s.tipo === 'COLOR CENTER' ? 'bg-primary' : (s.tipo === 'LOCAL' ? 'bg-warning text-dark' : 'bg-secondary');    
                 tr.innerHTML = `
-<td class="fw-bold">${s.folio}</td>
-    <td>${s.empresa}</td>
-    <td>${s.zona}</td>
-    <td>${s.sucursal}</td>
-    <td><span class="badge ${tipoBadge}">${s.tipo}</span></td>
-    <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
-    <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
-    <td><small>${Math.floor((new Date() - new Date(s.fechaISO))/3600000)}h</small></td>
-    <td>
-        <div class="d-flex justify-content-center gap-2">
-            <span class="action-btn" onclick="verHistorial('${s.folio}')" title="Historial">📜</span>
-            <span class="action-btn text-primary" onclick="editarRegistro('${doc.key}')" title="Editar">✏️</span>
-            ${statusActual === "NO AUTORIZADO" ? 
-                `<span class="action-btn text-danger" onclick="rechazarSolicitud('${doc.key}', '${s.folio}')">🗑️</span>` :
-                `<span class="action-btn text-info" onclick="modalSegLocal('${doc.key}', '${s.folio}')">📋</span>`
-            }
-        </div>
-    </td>
-`;
-  const row = `
-  
-            <i class="fa-solid fa-eye text-primary action-btn" onclick="verDetalles('${key}')"></i>
-            <i class="fa-solid fa-clock-history text-secondary ms-2 action-btn" onclick="verHistorial('${d.folio}')"></i>
-        </td>
-    </tr>
-`;                  
+                    <td class="fw-bold">${s.folio}</td>
+                    <td>${s.empresa}</td>
+                    <td>${s.zona}</td>
+                    <td>${s.sucursal}</td>
+                    <td><span class="badge ${esLocal ? 'bg-warning text-dark' : 'bg-secondary'}">${esLocal ? 'LOCAL' : 'COMPRAS'}</span></td>
+                    <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
+                    <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
+                    <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
     <td>
     <div class="d-flex justify-content-center gap-2">
         <span class="action-btn" onclick="verHistorial('${s.folio}')" title="Historial">📜</span>
@@ -609,53 +582,47 @@ window.exportarExcel = async () => {
             Swal.fire("Éxito", "Actualizado", "success");
         }
     };
-window.guardarSolicitud = async () => {
-    const emp = document.getElementById("empresa").value;
-    const zon = document.getElementById("zona").value;
-    const suc = document.getElementById("sucursal").value;
-    const arc = document.getElementById("archivo").files[0];
-    const isLocal = document.getElementById("checkLocal").checked;
-    const isUrgente = document.getElementById("urgente").checked;
-    const isColorCenter = document.getElementById("colorCenter").checked;
 
-    if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
-    
-    document.getElementById("loader").style.display = "flex";
-    const snap = await get(ref(database, "tecnologia"));
-    const contador = snap.exists() ? Object.keys(snap.val()).length + 1 : 1;
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-        const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
-        
-        // Determinación del tipo
-        let tipoFinal = "COMPRAS";
-        if (isColorCenter) tipoFinal = "COLOR CENTER";
-        else if (isLocal) tipoFinal = "LOCAL";
-
-        await push(ref(database, "tecnologia"), {
-            folio: fol,
-            empresa: emp.toUpperCase(),
-            zona: zon.toUpperCase(),
-            sucursal: suc.toUpperCase(),
-            soporte: window.nombreSesion,
-            archivoData: reader.result,
-            tipo: tipoFinal,
-            urgente: isUrgente,
-            status: isLocal || isColorCenter ? "EN COTIZACION" : "PENDIENTE",
-            fechaISO: new Date().toISOString(),
-            usuario: window.usuarioSesion,
-            eliminado: false
-        });
-
-        document.getElementById("formTec").reset();
-        document.getElementById("preview-container").innerHTML = '<small class="text-muted">Vista previa</small>';
-        document.getElementById("loader").style.display = "none";
-        Swal.fire("Éxito", "Solicitud " + fol + " guardada", "success");
+    window.guardarSolicitud = async () => {
+        const emp = document.getElementById("empresa").value;
+        const zon = document.getElementById("zona").value;
+        const suc = document.getElementById("sucursal").value;
+        const arc = document.getElementById("archivo").files[0];
+        const local = document.getElementById("checkLocal").checked;
+        if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
+        document.getElementById("loader").style.display = "flex";
+        const snap = await get(solicitudesRef);
+        let contador = 1;
+        if (snap.exists()) {
+             contador = Object.keys(snap.val()).length + 1;
+        }
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
+            await push(solicitudesRef, {
+                folio: fol, 
+                empresa: emp.toUpperCase(), 
+                zona: zon.toUpperCase(), 
+                sucursal: suc.toUpperCase(),
+                soporte: window.nombreSesion, 
+                puesto: window.puestoSesion,
+                archivoData: reader.result, 
+                status: local ? "EN COTIZACION" : "PENDIENTE", 
+                solicitudLocal: local, 
+                isLocal: local,
+                fechaISO: new Date().toISOString(),
+                usuario: window.usuarioSesion, 
+                eliminado: false
+            });
+            document.getElementById("formTec").reset();
+            document.getElementById("preview-container").innerHTML = '<small class="text-muted">Vista previa</small>';
+            document.getElementById("loader").style.display = "none";
+            Swal.fire("Éxito", "Solicitud guardada correctamente", "success");
+        };
+        reader.readAsDataURL(arc);
     };
-    reader.readAsDataURL(arc);
-};
-      window.verPDF = (base64, folio) => {
+
+    window.verPDF = (base64, folio) => {
         const w = window.open();
         w.document.write(`<iframe src="${base64}" title="${folio}" style="width:100%; height:100%; border:none;"></iframe>`);
     };
@@ -736,7 +703,6 @@ window.rechazarSolicitud = async (idKey, folio) => {
     window.cerrarSesion = () => { localStorage.clear(); location.href = "index.html"; };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 </script> 
 </body>
 </html>
