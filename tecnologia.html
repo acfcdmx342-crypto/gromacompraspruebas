@@ -221,32 +221,26 @@
             const esCenter = s.solicitudCenter === true || s.isCenter === true;
             let badgeClass = "st-compras"; 
             if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
-            else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion" and "st-center-cotizacion";
+            else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion"
+            else if (statusActual === "EN COTIZACION") badgeClass = "st-center-cotizacion"    
             else if (statusActual === "DEVOLUCION") badgeClass = "st-devolucion";
             else if (statusActual === "PENDIENTE") badgeClass = "st-pendiente";
             else if (statusActual === "NO AUTORIZADO") badgeClass = "st-no-autorizado";
             if (window.esAdmin || s.usuario === window.usuarioSesion) {
                 const tr = document.createElement("tr");
                 if(esLocal) tr.classList.add("fila-local");
+                if(esCenter) tr.classList.add("fila-center");
                 tr.innerHTML = `
                     <td class="fw-bold">${s.folio}</td>
                     <td>${s.empresa}</td>
                     <td>${s.zona}</td>
                     <td>${s.sucursal}</td>
                     <td><span class="badge ${esLocal ? 'bg-warning text-dark' : 'bg-secondary'}">${esLocal ? 'LOCAL' : 'COMPRAS'}</span></td>
+                    <td><span class="badge ${esCenter ? 'bg-warning text-dark' : 'bg-secondary'}">${esCenter ? 'CENTER' : 'CENTER'}</span></td>
                     <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
                     <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
-                    <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
-    <td>
-     <td class="fw-bold">${s.folio}</td>
-                    <td>${s.empresa}</td>
-                    <td>${s.zona}</td>
-                    <td>${s.sucursal}</td>
-                    <td><span class="badge ${esCenter ? 'bg-warning text-dark' : 'bg-secondary'}">${esCenter ? 'Color Center' : 'COMPRAS'}</span></td>
-                    <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
-                    <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
-                    <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
-    <td>
+                   <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
+       <td>
     <div class="d-flex justify-content-center gap-2">
         <span class="action-btn" onclick="verHistorial('${s.folio}')" title="Historial">📜</span>
         <span class="action-btn text-primary" onclick="editarRegistro('${doc.key}')" title="Editar">✏️</span>
@@ -259,14 +253,18 @@
             ${esLocal ? 
                 `<span class="action-btn text-info" onclick="modalSegLocal('${doc.key}', '${s.folio}')" title="Seguimiento Local">📋</span>` :
                 `<span class="action-btn text-primary" onclick="window.location.href='seguimiento.html?folio=${s.folio}'" title="Seguimiento Compras">📋</span>`
-`<span class="action-btn text-info" onclick="modalSegCenter('${doc.key}', '${s.folio}')" title="Seguimiento center">📋</span>` :
-            }
+              }
+              ${esCenter ? 
+                `<span class="action-btn text-info" onclick="modalSegCenter('${doc.key}', '${s.folio}')" title="Seguimiento center">📋</span>` :
+                `<span class="action-btn text-primary" onclick="window.location.href='seguimiento.html?folio=${s.folio}'" title="Seguimiento Compras">📋</span>`
+             }
             ${(window.esSoporteJR || window.esAdmin) && (
                 (esLocal && (statusActual === "EN ZONA" || statusActual === "DEVOLUCION")) || 
                 (!esLocal && (statusActual === "ENVIADO A ZONA" || statusActual === "DEVOLUCION"))
                 (esCenter && (statusActual === "EN ZONA" || statusActual === "DEVOLUCION")) || 
                 (!esCenter && (statusActual === "ENVIADO A ZONA" || statusActual === "DEVOLUCION"))
-            ) ? `
+                )
+             ? `
                 <span class="action-btn text-success" onclick="confirmarEntrega('${doc.key}', '${s.folio}')" title="Confirmar Entrega"><i class="fa-solid fa-circle-check"></i></span>
                 <span class="action-btn text-warning" onclick="enviarDevolucion('${doc.key}', '${s.folio}')" title="Devolución"><i class="fa-solid fa-arrow-rotate-left"></i></span>
             ` : ''}
@@ -581,6 +579,7 @@ window.exportarExcel = async () => {
                     <label class="fw-bold mb-1">Observaciones</label>
                     <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
                 </div>
+      };          
     window.modalSegCenter = async (id, folio) => {
         const historialPrevio = globalSeguimientos.filter(x => x.folio === folio).sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
         const articuloExistente = historialPrevio.length > 0 ? historialPrevio[0].descripcionArt : "";
@@ -636,6 +635,7 @@ window.exportarExcel = async () => {
         const reader = new FileReader();
         reader.onload = async () => {
             const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
+            const esLocal=local || center;
             await push(solicitudesRef, {
                 folio: fol, 
                 empresa: emp.toUpperCase(), 
@@ -647,7 +647,6 @@ window.exportarExcel = async () => {
                 status: local ? "EN COTIZACION" : "PENDIENTE", 
                 solicitudLocal: local, 
                 isLocal: local,
-                status: center ? "EN COTIZACION" : "PENDIENTE", 
                 solicitudCenter: center, 
                 isCenter: center,
                 fechaISO: new Date().toISOString(),
@@ -673,7 +672,6 @@ window.exportarExcel = async () => {
         let rows = h.map(i => `
             <tr>
                 <td>${new Date(i.fechaRegistro).toLocaleString()}</td>
-                <td>${new Date(i.fechaRegistro).toCentereString()}</td>
                 <td><span class="badge ${i.status === 'DEVOLUCION' ? 'st-devolucion' : 'bg-info'}">${i.status}</span></td>
                 <td>
                     <b>ART:</b> ${i.descripcionArt || '-'}<br>
