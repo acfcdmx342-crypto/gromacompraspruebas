@@ -26,6 +26,7 @@
         .st-pendiente { background-color: #dc3545 !important; color: white; } 
         .st-devolucion { background-color: #6f42c1 !important; color: white; }
         .st-local-cotizacion { background-color: #fd7e14 !important; color: white; }
+        .st-center-cotizacion { background-color: #fd7e14 !important; color: white; }
         .st-no-autorizado { background-color: #B02207 !important; color: white; }
         #loader { 
             display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -38,6 +39,7 @@
         body.dark-mode .table td { background-color: #1d1f21 !important; color: #ffffff !important; border-color: #444; }
         body.dark-mode .form-control { background-color: #2b3035 !important; color: #fff !important; border-color: #495057; }
         body.dark-mode .fila-local td { background-color: #2c2610 !important; }
+        body.dark-mode .fila-center td { background-color: #2c2610 !important; }
         body.dark-mode .text-muted {color: #bbb !important; /* Un gris más claro para que resalte en el fondo negro */}
         .mode-toggle-btn { width: 42px; height: 42px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.3s; margin-right: 10px; }
         #preview-container { border: 2px dashed #ccc; border-radius: 10px; min-height: 100px; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden; margin-top: 5px; }
@@ -216,9 +218,10 @@
             const statusActual = segsFolio.length > 0 ? segsFolio[0].status : (s.status || "PENDIENTE");
             if (statusActual === "CONFIRMADO") return;
             const esLocal = s.solicitudLocal === true || s.isLocal === true;
+            const esCenter = s.solicitudCenter === true || s.isCenter === true;
             let badgeClass = "st-compras"; 
             if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
-            else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion";
+            else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion" and "st-center-cotizacion";
             else if (statusActual === "DEVOLUCION") badgeClass = "st-devolucion";
             else if (statusActual === "PENDIENTE") badgeClass = "st-pendiente";
             else if (statusActual === "NO AUTORIZADO") badgeClass = "st-no-autorizado";
@@ -235,6 +238,15 @@
                     <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
                     <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
     <td>
+     <td class="fw-bold">${s.folio}</td>
+                    <td>${s.empresa}</td>
+                    <td>${s.zona}</td>
+                    <td>${s.sucursal}</td>
+                    <td><span class="badge ${esCenter ? 'bg-warning text-dark' : 'bg-secondary'}">${esCenter ? 'Color Center' : 'COMPRAS'}</span></td>
+                    <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
+                    <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
+                    <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
+    <td>
     <div class="d-flex justify-content-center gap-2">
         <span class="action-btn" onclick="verHistorial('${s.folio}')" title="Historial">📜</span>
         <span class="action-btn text-primary" onclick="editarRegistro('${doc.key}')" title="Editar">✏️</span>
@@ -247,10 +259,13 @@
             ${esLocal ? 
                 `<span class="action-btn text-info" onclick="modalSegLocal('${doc.key}', '${s.folio}')" title="Seguimiento Local">📋</span>` :
                 `<span class="action-btn text-primary" onclick="window.location.href='seguimiento.html?folio=${s.folio}'" title="Seguimiento Compras">📋</span>`
+`<span class="action-btn text-info" onclick="modalSegCenter('${doc.key}', '${s.folio}')" title="Seguimiento center">📋</span>` :
             }
             ${(window.esSoporteJR || window.esAdmin) && (
                 (esLocal && (statusActual === "EN ZONA" || statusActual === "DEVOLUCION")) || 
                 (!esLocal && (statusActual === "ENVIADO A ZONA" || statusActual === "DEVOLUCION"))
+                (esCenter && (statusActual === "EN ZONA" || statusActual === "DEVOLUCION")) || 
+                (!esCenter && (statusActual === "ENVIADO A ZONA" || statusActual === "DEVOLUCION"))
             ) ? `
                 <span class="action-btn text-success" onclick="confirmarEntrega('${doc.key}', '${s.folio}')" title="Confirmar Entrega"><i class="fa-solid fa-circle-check"></i></span>
                 <span class="action-btn text-warning" onclick="enviarDevolucion('${doc.key}', '${s.folio}')" title="Devolución"><i class="fa-solid fa-arrow-rotate-left"></i></span>
@@ -566,6 +581,25 @@ window.exportarExcel = async () => {
                     <label class="fw-bold mb-1">Observaciones</label>
                     <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
                 </div>
+    window.modalSegCenter = async (id, folio) => {
+        const historialPrevio = globalSeguimientos.filter(x => x.folio === folio).sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
+        const articuloExistente = historialPrevio.length > 0 ? historialPrevio[0].descripcionArt : "";
+        const esPrimerSeguimiento = historialPrevio.length === 0;
+        const { value: formValues } = await Swal.fire({
+            title: `Seguimiento Center<br><small class="text-muted">Folio: ${folio}</small>`,
+            html: `
+                <div class="text-start" style="font-size: 14px;">
+                    <label class="fw-bold mb-1">Estado</label>
+                    <select id="swal-status" class="form-select mb-3">
+                        <option value="EN COTIZACION">EN COTIZACION</option>
+                        <option value="EN ZONA">EN ZONA</option>
+                        <option value="NO AUTORIZADO">NO AUTORIZADO</option>
+                    </select>
+                    <label class="fw-bold mb-1">Artículo / Equipo</label>
+                    <input id="swal-art" class="form-control mb-3 text-uppercase" value="${articuloExistente}" ${!esPrimerSeguimiento ? 'readonly' : ''}>
+                    <label class="fw-bold mb-1">Observaciones</label>
+                    <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
+                </div>
             `,
             showCancelButton: true,
             confirmButtonText: '💾 Guardar',
@@ -591,6 +625,7 @@ window.exportarExcel = async () => {
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
         const local = document.getElementById("checkLocal").checked;
+        const center = document.getElementById("checkCenter").checked;
         if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
         document.getElementById("loader").style.display = "flex";
         const snap = await get(solicitudesRef);
@@ -612,6 +647,9 @@ window.exportarExcel = async () => {
                 status: local ? "EN COTIZACION" : "PENDIENTE", 
                 solicitudLocal: local, 
                 isLocal: local,
+                status: center ? "EN COTIZACION" : "PENDIENTE", 
+                solicitudCenter: center, 
+                isCenter: center,
                 fechaISO: new Date().toISOString(),
                 usuario: window.usuarioSesion, 
                 eliminado: false
@@ -635,6 +673,7 @@ window.exportarExcel = async () => {
         let rows = h.map(i => `
             <tr>
                 <td>${new Date(i.fechaRegistro).toLocaleString()}</td>
+                <td>${new Date(i.fechaRegistro).toCentereString()}</td>
                 <td><span class="badge ${i.status === 'DEVOLUCION' ? 'st-devolucion' : 'bg-info'}">${i.status}</span></td>
                 <td>
                     <b>ART:</b> ${i.descripcionArt || '-'}<br>
