@@ -253,14 +253,7 @@
     </td>
 `;
   const row = `
-    <tr class="${d.urgente ? 'table-warning' : ''}">
-        <td>${d.fecha}</td>
-        <td><b>${d.folio}</b></td>
-        <td>${d.sucursal}</td>
-        <td>${d.soporte}</td>
-        <td class="${d.tipo === 'COLOR CENTER' ? 'text-primary fw-bold' : ''}">${d.tipo}</td>
-        <td><span class="badge ${getBadgeClass(d.status)}">${d.status}</span></td>
-        <td>
+  
             <i class="fa-solid fa-eye text-primary action-btn" onclick="verDetalles('${key}')"></i>
             <i class="fa-solid fa-clock-history text-secondary ms-2 action-btn" onclick="verHistorial('${d.folio}')"></i>
         </td>
