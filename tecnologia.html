@@ -114,7 +114,20 @@
                         <input class="form-check-input" type="checkbox" id="checkLocal">
                         <label class="form-check-label small fw-bold ms-2" for="checkLocal">Local</label>
                     </div>
-                </div>
+             <div class="mb-3">
+    <label class="form-label">PRIORIDAD Y CATEGORÍA</label>
+    <div class="d-flex gap-3 mt-2">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="urgente">
+            <label class="form-check-label text-danger fw-bold">URGENTE</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="colorCenter">
+            <label class="form-check-label text-primary fw-bold">REFACCIONES COLOR CENTER</label>
+        </div>
+    </div>
+</div>
+         </div>
                 <div id="preview-container"><small class="text-muted">Vista previa</small></div>
             </div>
             <div class="col-md-6 d-flex align-items-center justify-content-center">
@@ -232,6 +245,20 @@
                     <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
                     <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
                     <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
+  const row = `
+    <tr class="${d.urgente ? 'table-warning' : ''}">
+        <td>${d.fecha}</td>
+        <td><b>${d.folio}</b></td>
+        <td>${d.sucursal}</td>
+        <td>${d.soporte}</td>
+        <td class="${d.tipo === 'COLOR CENTER' ? 'text-primary fw-bold' : ''}">${d.tipo}</td>
+        <td><span class="badge ${getBadgeClass(d.status)}">${d.status}</span></td>
+        <td>
+            <i class="fa-solid fa-eye text-primary action-btn" onclick="verDetalles('${key}')"></i>
+            <i class="fa-solid fa-clock-history text-secondary ms-2 action-btn" onclick="verHistorial('${d.folio}')"></i>
+        </td>
+    </tr>
+`;                  
     <td>
     <div class="d-flex justify-content-center gap-2">
         <span class="action-btn" onclick="verHistorial('${s.folio}')" title="Historial">📜</span>
@@ -619,7 +646,22 @@ window.exportarExcel = async () => {
             document.getElementById("loader").style.display = "none";
             Swal.fire("Éxito", "Solicitud guardada correctamente", "success");
         };
-        reader.readAsDataURL(arc);
+const isColorCenter = document.getElementById("colorCenter").checked;
+const tipoFinal = isColorCenter ? "COLOR CENTER" : document.getElementById("tipo").value;
+
+const nuevaSolicitud = {
+    folio: folio,
+    fecha: new Date().toLocaleDateString(),
+    soporte: document.getElementById("soporte").value.toUpperCase(),
+    sucursal: document.getElementById("sucursal").value,
+    tipo: tipoFinal, // Aquí se asigna COLOR CENTER si el check está activo
+    urgente: document.getElementById("urgente").checked,
+    status: "REGISTRADO",
+    archivoData: base64,
+    usuario: sesion.nombre,
+    eliminado: false
+};
+ reader.readAsDataURL(arc);
     };
 
     window.verPDF = (base64, folio) => {
