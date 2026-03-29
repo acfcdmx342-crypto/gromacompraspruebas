@@ -114,6 +114,9 @@
                         <input class="form-check-input" type="checkbox" id="checkLocal">
                         <label class="form-check-label small fw-bold ms-2" for="checkLocal">Local</label>
                     </div>
+                    <input class="form-check-input" type="checkbox" id="checkColorCenter">
+        <label class="form-check-label small fw-bold ms-2" for="checkColorCenter">Color Center</label>
+    </div> 
                 </div>
                 <div id="preview-container"><small class="text-muted">Vista previa</small></div>
             </div>
@@ -214,8 +217,18 @@
             const statusActual = segsFolio.length > 0 ? segsFolio[0].status : (s.status || "PENDIENTE");
             if (statusActual === "CONFIRMADO") return;
             const esLocal = s.solicitudLocal === true || s.isLocal === true;
-            let badgeClass = "st-compras"; 
-            if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
+            const esColor = s.colorCenter === true;
+            let tipoTexto = "COMPRAS";
+let tipoClase = "bg-secondary";
+
+if(esColor){
+    tipoTexto = "COLOR CENTER";
+    tipoClase = "bg-info";
+}else if(esLocal){
+    tipoTexto = "LOCAL";
+    tipoClase = "bg-warning text-dark";
+}
+          if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
             else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion";
             else if (statusActual === "DEVOLUCION") badgeClass = "st-devolucion";
             else if (statusActual === "PENDIENTE") badgeClass = "st-pendiente";
@@ -224,6 +237,11 @@
                 const tr = document.createElement("tr");
                 if(esLocal) tr.classList.add("fila-local");
                 tr.innerHTML = `
+                <td>
+                <span class="badge ${tipoClase}">
+        ${tipoTexto}
+    </span>
+</td>
                     <td class="fw-bold">${s.folio}</td>
                     <td>${s.empresa}</td>
                     <td>${s.zona}</td>
@@ -610,6 +628,7 @@ window.exportarExcel = async () => {
                 status: local ? "EN COTIZACION" : "PENDIENTE", 
                 solicitudLocal: local, 
                 isLocal: local,
+                colorCenter: colorCenter,
                 fechaISO: new Date().toISOString(),
                 usuario: window.usuarioSesion, 
                 eliminado: false
