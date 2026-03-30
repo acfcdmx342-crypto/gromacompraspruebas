@@ -111,8 +111,10 @@
                 <div class="input-group">
                     <input id="archivo" type="file" class="form-control" onchange="previewArchivo(this)">
                     <div class="input-group-text">
-                        <input class="form-check-input" type="checkbox" id="checkLocal">
-                        <label class="form-check-label small fw-bold ms-2" for="checkLocal">Local</label>
+  <input class="form-check-input" type="checkbox" id="checkLocal">
+<label class="form-check-label small fw-bold ms-2 me-3" for="checkLocal">Local</label>
+<input class="form-check-input" type="checkbox" id="checkCenter">
+<label class="form-check-label small fw-bold ms-2" for="checkCenter">Color Center</label>
                     </div>
                 </div>
                 <div id="preview-container"><small class="text-muted">Vista previa</small></div>
@@ -213,7 +215,7 @@
             const segsFolio = globalSeguimientos.filter(x => x.folio === s.folio).sort((a,b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
             const statusActual = segsFolio.length > 0 ? segsFolio[0].status : (s.status || "PENDIENTE");
             if (statusActual === "CONFIRMADO") return;
-            const esLocal = s.solicitudLocal === true || s.isLocal === true;
+            const esLocal = s.solicitudLocal === true || s.isLocal === true || s.colorCenter === true;
             let badgeClass = "st-compras"; 
             if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
             else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion";
@@ -228,7 +230,7 @@
                     <td>${s.empresa}</td>
                     <td>${s.zona}</td>
                     <td>${s.sucursal}</td>
-                    <td><span class="badge ${esLocal ? 'bg-warning text-dark' : 'bg-secondary'}">${esLocal ? 'LOCAL' : 'COMPRAS'}</span></td>
+                    <td><span class="badge ${esLocal ? 'bg-warning text-dark' : 'bg-secondary'}">${s.colorCenter ? 'COLOR CENTER' : (esLocal ? 'LOCAL' : 'COMPRAS')}</span></td>
                     <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
                     <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
                     <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
@@ -588,7 +590,11 @@ window.exportarExcel = async () => {
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
-        const local = document.getElementById("checkLocal").checked;
+       const localCheck = document.getElementById("checkLocal").checked;
+const centerCheck = document.getElementById("checkCenter").checked;
+// 👉 SI ES LOCAL O COLOR CENTER
+const local = localCheck || centerCheck;
+const colorCenter = centerCheck;
         if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
         document.getElementById("loader").style.display = "flex";
         const snap = await get(solicitudesRef);
@@ -608,8 +614,9 @@ window.exportarExcel = async () => {
                 puesto: window.puestoSesion,
                 archivoData: reader.result, 
                 status: local ? "EN COTIZACION" : "PENDIENTE", 
-                solicitudLocal: local, 
+                solicitudLocal: local,
                 isLocal: local,
+                colorCenter:colorCenter,
                 fechaISO: new Date().toISOString(),
                 usuario: window.usuarioSesion, 
                 eliminado: false
