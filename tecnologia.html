@@ -237,6 +237,9 @@
             const esLocal = s.solicitudLocal === true || s.isLocal === true || s.colorCenter === true;
             let badgeClass = "st-compras"; 
             const precio = s.colorCenter ? obtenerPrecioPorFolio(s.folio) : "";
+            const precio = s.precioRefaccion 
+    ? formatearMoneda(s.precioRefaccion) 
+    : "";
             if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
             else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion";
             else if (statusActual === "DEVOLUCION") badgeClass = "st-devolucion";
@@ -694,11 +697,17 @@ precio = precio ? parseFloat(precio) : null;
             ...formValues,
             fechaRegistro: new Date().toISOString(),
             usuario: window.nombreSesion
+            
         });
 
         Swal.fire("Éxito", "Actualizado", "success");
     }
 };
+    if(formValues.precioRefaccion){
+    await update(ref(db, 'solicitudes/' + id), {
+        precioRefaccion: formValues.precioRefaccion
+    });
+}
 // 👉 guarda solicitud    
     window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
