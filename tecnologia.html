@@ -592,8 +592,8 @@ window.exportarExcel = async () => {
                 <div id="contenedor-precio" style="display:none;">
                     <label class="fw-bold mb-1">Precio Refacción</label>
                     <input id="swal-precio" type="number" class="form-control mb-3"
-                        value="${precioExistente || ''}"
-                        ${!esPrimerSeguimiento ? 'readonly' : ''}>
+                        value="${precioExistente || ''}">
+                     
                 </div>
 
                 <label class="fw-bold mb-1">Observaciones</label>
@@ -606,7 +606,11 @@ window.exportarExcel = async () => {
         didOpen: () => {
             const statusSelect = document.getElementById("swal-status");
             const contPrecio = document.getElementById("contenedor-precio");
+const inputPrecio = document.getElementById("swal-precio");
 
+if(precioExistente){
+    inputPrecio.setAttribute("readonly", true);
+}
             const togglePrecio = () => {
                 if(statusSelect.value === "AUTORIZADO" && esColorCenter){
                     contPrecio.style.display = "block";
