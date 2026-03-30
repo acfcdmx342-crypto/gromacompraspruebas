@@ -198,11 +198,10 @@ async function cargarHistorial() {
             if (!puedeVerTodo) {
                 if (soporteAsignado !== nombreSesion && usuarioCreador !== nombreSesion) return; 
             }
-            const precio = s.colorCenter ? obtenerPrecioPorFolio(s.folio) : "";
             const segsRaw = s.seguimientos || [];
             const segs = Array.isArray(segsRaw) ? segsRaw : Object.values(segsRaw);
             const estaEliminado = s.status === "ELIMINADO" || s.eliminado === true;
-            
+            const precio = s.colorCenter ? obtenerPrecioPorFolio(s.folio) : "";
             const segConf = segs.find(x => x.status === "CONFIRMADO");
             
             let claseFila = estaEliminado ? "st-eliminado" : (s.status === "PENDIENTE" ? "st-pendiente" : "st-confirmado");
