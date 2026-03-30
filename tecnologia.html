@@ -207,12 +207,33 @@
             });
             renderTable(sSnap);
         });
-    });
-    function renderTable(snap) {
+      function renderTable(snap) {
         const tbody = document.getElementById("tablaTecBody");
         tbody.innerHTML = ""; 
         snap.forEach(doc => {
             const s = doc.val();
+            let tipoTexto = "COMPRAS";
+    let tipoClase = "bg-secondary";
+
+    if(s.colorCenter){
+        tipoTexto = "COLOR CENTER";
+        tipoClase = "bg-info";
+    }else if(s.solicitudLocal || s.isLocal){
+        tipoTexto = "LOCAL";
+        tipoClase = "bg-warning text-dark";
+    }
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+        <td>${s.folio}</td>
+        <td>${s.empresa}</td>
+        <td>${s.sucursal}</td>
+        <td><span class="badge ${tipoClase}">${tipoTexto}</span></td>
+    `;
+
+    tbody.appendChild(tr);
+});
             if (s.eliminado) return;
             const segsFolio = globalSeguimientos.filter(x => x.folio === s.folio).sort((a,b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
             const statusActual = segsFolio.length > 0 ? segsFolio[0].status : (s.status || "PENDIENTE");
