@@ -203,7 +203,12 @@
         snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key }); });
         onValue(solicitudesRef, sSnap => {
             globalSolicitudes = [];
-            
+           sSnap.forEach(doc => { 
+                const data = doc.val();
+                if(!data.eliminado) globalSolicitudes.push({ ...data, id: doc.key }); 
+            });
+            renderTable(sSnap);
+        }); 
       function renderTable(snap) {
         const tbody = document.getElementById("tablaTecBody");
         tbody.innerHTML = ""; 
