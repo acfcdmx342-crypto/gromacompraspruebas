@@ -236,10 +236,12 @@
             if (statusActual === "CONFIRMADO") return;
             const esLocal = s.solicitudLocal === true || s.isLocal === true || s.colorCenter === true;
             let badgeClass = "st-compras"; 
-            const precio = s.colorCenter ? obtenerPrecioPorFolio(s.folio) : "";
-            const precio = s.precioRefaccion 
-    ? formatearMoneda(s.precioRefaccion) 
-    : "";
+       let precio = "";
+if (s.colorCenter) {
+    precio = obtenerPrecioPorFolio(s.folio);
+} else if (s.precioRefaccion) {
+    precio = formatearMoneda(s.precioRefaccion);
+}
             if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
             else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion";
             else if (statusActual === "DEVOLUCION") badgeClass = "st-devolucion";
@@ -286,7 +288,9 @@
                 tbody.appendChild(tr);
             }
         });
-        document.getElementById("loader").style.display = "none";
+  window.addEventListener("error", () => {
+    document.getElementById("loader").style.display = "none";
+});
     }
 
     // --- FUNCIÓN EXPORTAR EXCEL ---
@@ -703,12 +707,7 @@ precio = precio ? parseFloat(precio) : null;
         Swal.fire("Éxito", "Actualizado", "success");
     }
 };
-    if(formValues.precioRefaccion){
-    await update(ref(db, 'solicitudes/' + id), {
-        precioRefaccion: formValues.precioRefaccion
-    });
-}
-// 👉 guarda solicitud    
+ // 👉 guarda solicitud    
     window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
         const zon = document.getElementById("zona").value;
