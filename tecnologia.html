@@ -547,47 +547,120 @@ window.exportarExcel = async () => {
         }
     };
 // 👉 OPCIONES DE STATUS LOCAL COLORCENTER
-    window.modalSegLocal = async (id, folio) => {
-        const historialPrevio = globalSeguimientos.filter(x => x.folio === folio).sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
-        const articuloExistente = historialPrevio.length > 0 ? historialPrevio[0].descripcionArt : "";
-        const esPrimerSeguimiento = historialPrevio.length === 0;
-        const { value: formValues } = await Swal.fire({
-            title: `Seguimiento Local<br><small class="text-muted">Folio: ${folio}</small>`,
-            html: `
-                <div class="text-start" style="font-size: 14px;">
-                    <label class="fw-bold mb-1">Estado</label>
-                    <select id="swal-status" class="form-select mb-3">
-                        <option value="PENDIENTE">PENDIENTE</option>
-                        <option value="EN COTIZACION">EN COTIZACION</option>
-                        <option value="COMPARATIVO">COMPARATIVO</option>
-                        <option value="AUTORIZADO">AUTORIZADO</option>
-                        <option value="EN ZONA">EN ZONA</option>
-                        <option value="NO AUTORIZADO">NO AUTORIZADO</option>
-                    </select>
-                    <label class="fw-bold mb-1">Artículo / Equipo</label>
-                    <input id="swal-art" class="form-control mb-3 text-uppercase" value="${articuloExistente}" ${!esPrimerSeguimiento ? 'readonly' : ''}>
-                    <label class="fw-bold mb-1">Observaciones</label>
-                    <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: '💾 Guardar',
-            preConfirm: () => {
-                const art = document.getElementById('swal-art').value;
-                if (!art) return Swal.showValidationMessage('Ingresa el artículo');
-                return {
-                    status: document.getElementById('swal-status').value,
-                    descripcionArt: art.toUpperCase(),
-                    comentarios: document.getElementById('swal-com').value.toUpperCase()
-                }
-            }
-        });
-        if (formValues) {
-            await push(seguimientoRef, { folio, ...formValues, fechaRegistro: new Date().toISOString(), usuario: window.nombreSesion });
-            Swal.fire("Éxito", "Actualizado", "success");
-        }
-    };
+   window.modalSegLocal = async (id, folio) => {
 
+    const historialPrevio = globalSeguimientos
+        .filter(x => x.folio === folio)
+        .sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
+
+    const articuloExistente = historialPrevio.length > 0 ? historialPrevio[0].descripcionArt : "";
+    const codigoExistente = historialPrevio.length > 0 ? historialPrevio[0].codigoRefaccion : "";
+    const precioExistente = historialPrevio.length > 0 ? historialPrevio[0].precioRefaccion : "";
+
+    const esPrimerSeguimiento = historialPrevio.length === 0;
+
+    // 🔥 DETECTAR SI ES COLOR CENTER
+    const solicitud = globalSolicitudes.find(x => x.folio === folio);
+    const esColorCenter = solicitud?.colorCenter === true;
+
+    const { value: formValues } = await Swal.fire({
+        title: `Seguimiento Local<br><small class="text-muted">Folio: ${folio}</small>`,
+        html: `
+            <div class="text-start" style="font-size: 14px;">
+
+                <label class="fw-bold mb-1">Estado</label>
+                <select id="swal-status" class="form-select mb-3">
+                   <option value="PENDIENTE">PENDIENTE</option>
+                   <option value="EN COTIZACION">EN COTIZACION</option>
+                   <option value="COMPARATIVO">COMPARATIVO</option>
+                   <option value="AUTORIZADO">AUTORIZADO</option>
+                   <option value="EN ZONA">EN ZONA</option>
+                   <option value="NO AUTORIZADO">NO AUTORIZADO</option>
+                </select>
+                ${esColorCenter ? `
+                    <label class="fw-bold mb-1">Código Refacción</label>
+                    <input id="swal-codigo" class="form-control mb-3 text-uppercase"
+                        value="${codigoExistente || ''}"
+                        ${!esPrimerSeguimiento ? 'readonly' : ''}>
+                ` : ''}
+
+                <label class="fw-bold mb-1">Artículo / Equipo</label>
+                <input id="swal-art" class="form-control mb-3 text-uppercase"
+                    value="${articuloExistente}"
+                    ${!esPrimerSeguimiento ? 'readonly' : ''}>
+
+                <div id="contenedor-precio" style="display:none;">
+                    <label class="fw-bold mb-1">Precio Refacción</label>
+                    <input id="swal-precio" type="number" class="form-control mb-3"
+                        value="${precioExistente || ''}"
+                        ${!esPrimerSeguimiento ? 'readonly' : ''}>
+                </div>
+
+                <label class="fw-bold mb-1">Observaciones</label>
+                <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '💾 Guardar',
+
+        didOpen: () => {
+            const statusSelect = document.getElementById("swal-status");
+            const contPrecio = document.getElementById("contenedor-precio");
+
+            const togglePrecio = () => {
+                if(statusSelect.value === "AUTORIZADO" && esColorCenter){
+                    contPrecio.style.display = "block";
+                } else {
+                    contPrecio.style.display = "none";
+                }
+            };
+
+            statusSelect.addEventListener("change", togglePrecio);
+            togglePrecio();
+        },
+
+        preConfirm: () => {
+
+            const status = document.getElementById('swal-status').value;
+            const art = document.getElementById('swal-art').value;
+
+            const codigo = esColorCenter ? document.getElementById('swal-codigo')?.value : null;
+            const precio = esColorCenter ? document.getElementById('swal-precio')?.value : null;
+
+            if (!art) return Swal.showValidationMessage('Ingresa el artículo');
+
+            // 🔴 VALIDACIÓN CÓDIGO
+            if (esColorCenter && esPrimerSeguimiento && !codigo) {
+                return Swal.showValidationMessage('Ingresa el código de refacción');
+            }
+
+            // 🔴 VALIDACIÓN PRECIO
+            if (esColorCenter && status === "AUTORIZADO" && !precio) {
+                return Swal.showValidationMessage('Ingresa el precio de la refacción');
+            }
+
+            return {
+                status,
+                descripcionArt: art.toUpperCase(),
+                comentarios: document.getElementById('swal-com').value.toUpperCase(),
+                codigoRefaccion: codigo ? codigo.toUpperCase() : null,
+                precioRefaccion: precio || null
+            }
+        }
+    });
+
+    if (formValues) {
+        await push(seguimientoRef, {
+            folio,
+            ...formValues,
+            fechaRegistro: new Date().toISOString(),
+            usuario: window.nombreSesion
+        });
+
+        Swal.fire("Éxito", "Actualizado", "success");
+    }
+};
+// 👉 guarda solicitud    
     window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
         const zon = document.getElementById("zona").value;
