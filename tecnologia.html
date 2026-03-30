@@ -591,11 +591,8 @@ window.exportarExcel = async () => {
 
                 <div id="contenedor-precio" style="display:none;">
                     <label class="fw-bold mb-1">Precio Refacción</label>
-                    <input id="swal-precio" type="number" class="form-control mb-3"
-                        value="${precioExistente || ''}">
-                     
-                </div>
-
+                    <input id="swal-precio" type="text" class="form-control mb-3" placeholder="$0.00">
+                   </div>
                 <label class="fw-bold mb-1">Observaciones</label>
                 <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
             </div>
@@ -607,7 +604,21 @@ window.exportarExcel = async () => {
             const statusSelect = document.getElementById("swal-status");
             const contPrecio = document.getElementById("contenedor-precio");
 const inputPrecio = document.getElementById("swal-precio");
+inputPrecio.addEventListener("input", (e) => {
+    let valor = e.target.value.replace(/[^0-9]/g, ""); // solo números
 
+    if(valor === ""){
+        e.target.value = "";
+        return;
+    }
+
+    let numero = parseFloat(valor) / 100;
+
+    e.target.value = numero.toLocaleString("es-MX", {
+        style: "currency",
+        currency: "MXN"
+    });
+});
 if(precioExistente){
     inputPrecio.setAttribute("readonly", true);
 }
@@ -629,7 +640,10 @@ if(precioExistente){
             const art = document.getElementById('swal-art').value;
 
             const codigo = esColorCenter ? document.getElementById('swal-codigo')?.value : null;
-            const precio = esColorCenter ? document.getElementById('swal-precio')?.value : null;
+           let precioTexto = document.getElementById('swal-precio')?.value || "";
+
+let precio = precioTexto.replace(/[^0-9.-]+/g, ""); // quitar $ y comas
+precio = precio ? parseFloat(precio) : null;
 
             if (!art) return Swal.showValidationMessage('Ingresa el artículo');
 
