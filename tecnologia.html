@@ -557,6 +557,7 @@ window.exportarExcel = async () => {
                 <div class="text-start" style="font-size: 14px;">
                     <label class="fw-bold mb-1">Estado</label>
                     <select id="swal-status" class="form-select mb-3">
+                        <option value="PENDIENTE">PENDIENTE</option>
                         <option value="EN COTIZACION">EN COTIZACION</option>
                         <option value="EN ZONA">EN ZONA</option>
                         <option value="NO AUTORIZADO">NO AUTORIZADO</option>
@@ -613,7 +614,7 @@ const colorCenter = centerCheck;
                 soporte: window.nombreSesion, 
                 puesto: window.puestoSesion,
                 archivoData: reader.result, 
-                status: local ? "EN COTIZACION" : "PENDIENTE", 
+                status: local ? "PENDIENTE" : "EN COTIZACION", 
                 solicitudLocal: local,
                 isLocal: local,
                 colorCenter:colorCenter,
