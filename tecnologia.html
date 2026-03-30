@@ -113,10 +113,12 @@
                 <div class="input-group">
                     <input id="archivo" type="file" class="form-control" onchange="previewArchivo(this)">
                     <div class="input-group-text">
-                        <input class="form-check-input" type="radio" id="checkLocal">
-                        <label class="form-check-label small fw-bold ms-2" for="checkLocal">Local</label>
-                        <input class="form-check-input" type="radio" id="checkCenter">
-                        <label class="form-check-label small fw-bold ms-2" for="checkCenter">Color Center</label>
+ <input class="form-check-input" type="radio" name="tipoSolicitud" value="COMPRAS" checked>
+<label class="form-check-label small fw-bold ms-2">Compras</label>
+<input class="form-check-input ms-2" type="radio" name="tipoSolicitud" value="LOCAL">
+<label class="form-check-label small fw-bold ms-2">Local</label>
+<input class="form-check-input ms-2" type="radio" name="tipoSolicitud" value="COLOR_CENTER">
+<label class="form-check-label small fw-bold ms-2">Color Center</label>   
                 </div>
                 </div>
                 <div id="preview-container"><small class="text-muted">Vista previa</small></div>
@@ -201,40 +203,11 @@
         snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key }); });
         onValue(solicitudesRef, sSnap => {
             globalSolicitudes = [];
-            sSnap.forEach(doc => { 
-                const data = doc.val();
-                if(!data.eliminado) globalSolicitudes.push({ ...data, id: doc.key }); 
-            });
-            renderTable(sSnap);
-        });
+            
       function renderTable(snap) {
         const tbody = document.getElementById("tablaTecBody");
         tbody.innerHTML = ""; 
-        snap.forEach(doc => {
-            const s = doc.val();
-            let tipoTexto = "COMPRAS";
-    let tipoClase = "bg-secondary";
-
-    if(s.colorCenter){
-        tipoTexto = "COLOR CENTER";
-        tipoClase = "bg-info";
-    }else if(s.solicitudLocal || s.isLocal){
-        tipoTexto = "LOCAL";
-        tipoClase = "bg-warning text-dark";
-    }
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-        <td>${s.folio}</td>
-        <td>${s.empresa}</td>
-        <td>${s.sucursal}</td>
-        <td><span class="badge ${tipoClase}">${tipoTexto}</span></td>
-    `;
-
-    tbody.appendChild(tr);
-});
-            if (s.eliminado) return;
+         if (s.eliminado) return;
             const segsFolio = globalSeguimientos.filter(x => x.folio === s.folio).sort((a,b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
             const statusActual = segsFolio.length > 0 ? segsFolio[0].status : (s.status || "PENDIENTE");
             if (statusActual === "CONFIRMADO") return;
@@ -243,7 +216,6 @@
             let badgeClass = "st-compras"; 
             if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
             else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion"
-            else if (statusActual === "EN COTIZACION") badgeClass = "st-center-cotizacion"    
             else if (statusActual === "DEVOLUCION") badgeClass = "st-devolucion";
             else if (statusActual === "PENDIENTE") badgeClass = "st-pendiente";
             else if (statusActual === "NO AUTORIZADO") badgeClass = "st-no-autorizado";
@@ -279,9 +251,10 @@
                 `<span class="action-btn text-info" onclick="modalSegCenter('${doc.key}', '${s.folio}')" title="Seguimiento center">📋</span>` :
                 `<span class="action-btn text-primary" onclick="window.location.href='seguimiento.html?folio=${s.folio}'" title="Seguimiento Compras">📋</span>`
              }
-            ${(window.esSoporteJR || window.esAdmin) && (
+            ${(window.esSoporteJR || window.esAdmin) &&
+              (
                 (esLocal && (statusActual === "EN ZONA" || statusActual === "DEVOLUCION")) || 
-                (!esLocal && (statusActual === "ENVIADO A ZONA" || statusActual === "DEVOLUCION"))
+                (!esLocal && (statusActual === "ENVIADO A ZONA" || statusActual === "DEVOLUCION")) || 
                 (esCenter && (statusActual === "EN ZONA" || statusActual === "DEVOLUCION")) || 
                 (!esCenter && (statusActual === "ENVIADO A ZONA" || statusActual === "DEVOLUCION"))
                 )
@@ -620,25 +593,24 @@ window.exportarExcel = async () => {
                     <label class="fw-bold mb-1">Observaciones</label>
                     <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
                 </div>
-            `,
-            showCancelButton: true,
-            confirmButtonText: '💾 Guardar',
-            preConfirm: () => {
-                const art = document.getElementById('swal-art').value;
-                if (!art) return Swal.showValidationMessage('Ingresa el artículo');
-                return {
-                    status: document.getElementById('swal-status').value,
-                    descripcionArt: art.toUpperCase(),
-                    comentarios: document.getElementById('swal-com').value.toUpperCase()
-                }
-            }
-        });
-        if (formValues) {
-            await push(seguimientoRef, { folio, ...formValues, fechaRegistro: new Date().toISOString(), usuario: window.nombreSesion });
-            Swal.fire("Éxito", "Actualizado", "success");
-        }
-    };
-
+                `,
+showCancelButton: true,
+confirmButtonText: '💾 Guardar',
+preConfirm: () => {
+    const art = document.getElementById('swal-art').value;
+    if (!art) return Swal.showValidationMessage('Ingresa el artículo');
+    return {
+        status: document.getElementById('swal-status').value,
+        descripcionArt: art.toUpperCase(),
+        comentarios: document.getElementById('swal-com').value.toUpperCase()
+    }
+}
+});
+if (formValues) {
+    await push(seguimientoRef, { folio, ...formValues, fechaRegistro: new Date().toISOString(), usuario: window.nombreSesion });
+    Swal.fire("Éxito", "Actualizado", "success");
+}
+};       
     window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
         const zon = document.getElementById("zona").value;
@@ -666,7 +638,7 @@ const esCenter = tipo === "COLOR_CENTER";
                 soporte: window.nombreSesion, 
                 puesto: window.puestoSesion,
                 archivoData: reader.result, 
-                status: local ? "EN COTIZACION" : "PENDIENTE", 
+                status: esLocal ? "EN COTIZACION" : "PENDIENTE", 
                 solicitudLocal: eslocal, 
                 isLocal: esLocal,
                 colorCenter: esCenter, 
