@@ -547,8 +547,7 @@ window.exportarExcel = async () => {
         }
     };
 // 👉 OPCIONES DE STATUS LOCAL COLORCENTER
-    window.modalSegLocal = async (id, folio) => {
-   window.modalSegLocal = async (id, folio) => {
+       window.modalSegLocal = async (id, folio) => {
         // Buscamos la solicitud en el array global para saber si es Color Center
         const solActual = globalSolicitudes.find(s => s.id === id);
         const esColorCenter = solActual && solActual.colorCenter === true;
