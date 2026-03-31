@@ -567,12 +567,13 @@ window.exportarExcel = async () => {
                         <option value="EN ZONA">EN ZONA</option>
                         <option value="NO AUTORIZADO">NO AUTORIZADO</option>
                     </select>
-
-                    ${(data.colorCenter && !data.codigoRefaccion) ? `
-                        <label class="fw-bold mb-1">Código de Refacción (Única vez)</label>
-                        <input id="swal-codigo" class="form-control mb-3 text-uppercase" placeholder="INGRESE CÓDIGO">
-                    ` : (data.codigoRefaccion ? `<p class="mb-2 small"><b>Código:</b> ${data.codigoRefaccion}</p>` : '')}
-
+                   ${(data.colorCenter) ? `
+    <label class="fw-bold mb-1">Código de Refacción</label>
+    ${data.codigoRefaccion 
+        ? `<input class="form-control mb-3 bg-light" value="${data.codigoRefaccion}" readonly>` 
+        : `<input id="swal-codigo" class="form-control mb-3 text-uppercase" placeholder="INGRESE CÓDIGO">`
+    }
+` : ''}
                     <div id="monto-container" style="display:none;">
                         <label class="fw-bold mb-1">Monto de Refacción (Única vez)</label>
                         <input id="swal-monto" type="number" class="form-control mb-3" placeholder="0.00" ${data.montoRefaccion ? 'disabled' : ''} value="${data.montoRefaccion || ''}">
@@ -588,6 +589,21 @@ window.exportarExcel = async () => {
             showCancelButton: true,
             confirmButtonText: '💾 Guardar',
             preConfirm: () => {
+                const res = {
+        status: document.getElementById('swal-status').value,
+        art: document.getElementById('swal-art').value.toUpperCase(),
+        com: document.getElementById('swal-com').value.toUpperCase()
+    };
+    
+    // Solo intenta leer el código si el input existe en el modal
+    const inputCodigo = document.getElementById('swal-codigo');
+    if (inputCodigo) {
+        res.codigo = inputCodigo.value.toUpperCase();
+        if (!res.codigo) return Swal.showValidationMessage('El código de refacción es obligatorio');
+    }
+    
+    return res;
+}
                 const art = document.getElementById('swal-art').value;
                 if (!art) return Swal.showValidationMessage('Ingresa el artículo');
                 return {
