@@ -141,7 +141,7 @@
             <table class="table table-bordered align-middle text-center bg-white">
                 <thead class="table-primary">
                     <tr>
-                        <th>Folio</th><th>Empresa</th><th>Zona</th><th>Sucursal</th>
+                        <th>Folio</th><th>Empresa</th><th>Zona</th><th>Sucursal</th><th>Precio</th>
                         <th>Tipo</th><th>Archivo</th><th>Status</th><th>Tiempo</th><th>Acciones</th>
                     </tr>
                 </thead>
@@ -206,6 +206,25 @@
             renderTable(sSnap);
         });
     });
+    function obtenerPrecioPorFolio(folio){
+    const registros = globalSeguimientos
+        .filter(x => x.folio === folio && x.precioRefaccion);
+
+    if(registros.length === 0) return "";
+
+    // tomar el último precio registrado
+    const ultimo = registros.sort((a,b) => 
+        new Date(b.fechaRegistro) - new Date(a.fechaRegistro)
+    )[0];
+
+    return formatearMoneda(ultimo.precioRefaccion);
+}
+ function formatearMoneda(valor){
+    return parseFloat(valor).toLocaleString("es-MX", {
+        style: "currency",
+        currency: "MXN"
+    });
+}   
     function renderTable(snap) {
         const tbody = document.getElementById("tablaTecBody");
         tbody.innerHTML = ""; 
@@ -217,6 +236,12 @@
             if (statusActual === "CONFIRMADO") return;
             const esLocal = s.solicitudLocal === true || s.isLocal === true || s.colorCenter === true;
             let badgeClass = "st-compras"; 
+       let precio = "";
+if (s.colorCenter) {
+    precio = obtenerPrecioPorFolio(s.folio);
+} else if (s.precioRefaccion) {
+    precio = formatearMoneda(s.precioRefaccion);
+}
             if (statusActual === "EN ZONA" || statusActual === "ENVIADO A ZONA") badgeClass = "st-zona";
             else if (statusActual === "EN COTIZACION") badgeClass = "st-local-cotizacion";
             else if (statusActual === "DEVOLUCION") badgeClass = "st-devolucion";
@@ -230,6 +255,7 @@
                     <td>${s.empresa}</td>
                     <td>${s.zona}</td>
                     <td>${s.sucursal}</td>
+                    <td>${precio}</td>
                     <td><span class="badge ${esLocal ? 'bg-warning text-dark' : 'bg-secondary'}">${s.colorCenter ? 'COLOR CENTER' : (esLocal ? 'LOCAL' : 'COMPRAS')}</span></td>
                     <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
                     <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
@@ -262,7 +288,9 @@
                 tbody.appendChild(tr);
             }
         });
-        document.getElementById("loader").style.display = "none";
+  window.addEventListener("error", () => {
+    document.getElementById("loader").style.display = "none";
+});
     }
 
     // --- FUNCIÓN EXPORTAR EXCEL ---
@@ -673,12 +701,13 @@ precio = precio ? parseFloat(precio) : null;
             ...formValues,
             fechaRegistro: new Date().toISOString(),
             usuario: window.nombreSesion
+            
         });
 
         Swal.fire("Éxito", "Actualizado", "success");
     }
 };
-// 👉 guarda solicitud    
+ // 👉 guarda solicitud    
     window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
         const zon = document.getElementById("zona").value;
@@ -806,5 +835,4 @@ window.rechazarSolicitud = async (idKey, folio) => {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </script> 
-</body>
 </html>
