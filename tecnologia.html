@@ -614,18 +614,8 @@ window.exportarExcel = async () => {
             }
         });
         if (formValues) {
-    const updates = {};
-    // Solo si formValues.codigo trae algo (primera vez), lo agregamos al update
-    if (formValues.codigo) {
-        updates.codigoRefaccion = formValues.codigo;
-    }
-    
-    if (Object.keys(updates).length > 0) {
-        await update(ref(database, `tecnologia/${id}`), updates);
-    }
-    
-    // ... guardar el registro en el nodo de seguimiento normal
-}
+            await push(seguimientoRef, { folio, ...formValues, fechaRegistro: new Date().toISOString(), usuario: window.nombreSesion });
+            Swal.fire("Éxito", "Actualizado", "success");
     };
 
     window.guardarSolicitud = async () => {
