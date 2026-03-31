@@ -548,11 +548,18 @@ window.exportarExcel = async () => {
     };
 // 👉 OPCIONES DE STATUS LOCAL COLORCENTER
     window.modalSegLocal = async (id, folio) => {
-        const historialPrevio = globalSeguimientos.filter(x => x.folio === folio).sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
+   window.modalSegLocal = async (id, folio) => {
+        // Buscamos la solicitud en el array global para saber si es Color Center
+        const solActual = globalSolicitudes.find(s => s.id === id);
+        const esColorCenter = solActual && solActual.colorCenter === true;
+
+        const historialPrevio = globalSeguimientos.filter(x => x.folio === folio).sort((a,b) => new Date(a.fechaRegistro) - new Date(a.fechaRegistro));
         const articuloExistente = historialPrevio.length > 0 ? historialPrevio[0].descripcionArt : "";
+        const codigoExistente = historialPrevio.length > 0 ? (historialPrevio[0].codigoRefaccion || "") : "";
         const esPrimerSeguimiento = historialPrevio.length === 0;
+
         const { value: formValues } = await Swal.fire({
-            title: `Seguimiento Local<br><small class="text-muted">Folio: ${folio}</small>`,
+            title: `Seguimiento ${esColorCenter ? 'Color Center' : 'Local'}<br><small class="text-muted">Folio: ${folio}</small>`,
             html: `
                 <div class="text-start" style="font-size: 14px;">
                     <label class="fw-bold mb-1">Estado</label>
@@ -564,30 +571,73 @@ window.exportarExcel = async () => {
                         <option value="EN ZONA">EN ZONA</option>
                         <option value="NO AUTORIZADO">NO AUTORIZADO</option>
                     </select>
+
+                    ${esColorCenter ? `
+                        <label class="fw-bold mb-1">Código de Refacción</label>
+                        <input id="swal-codigo" class="form-control mb-3 text-uppercase" value="${codigoExistente}" ${!esPrimerSeguimiento ? 'readonly' : ''}>
+                    ` : ''}
+
                     <label class="fw-bold mb-1">Artículo / Equipo</label>
                     <input id="swal-art" class="form-control mb-3 text-uppercase" value="${articuloExistente}" ${!esPrimerSeguimiento ? 'readonly' : ''}>
+                    
+                    <div id="contenedor-costo" style="display: none;">
+                        <label class="fw-bold mb-1">Costo de la Refacción</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">$</span>
+                            <input id="swal-costo" type="number" step="0.01" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+
                     <label class="fw-bold mb-1">Observaciones</label>
                     <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
                 </div>
             `,
             showCancelButton: true,
             confirmButtonText: '💾 Guardar',
+            didOpen: () => {
+                const selectStatus = document.getElementById('swal-status');
+                const divCosto = document.getElementById('contenedor-costo');
+                
+                // Lógica para mostrar costo solo si es Color Center y Status es AUTORIZADO
+                if (esColorCenter) {
+                    selectStatus.addEventListener('change', () => {
+                        divCosto.style.display = (selectStatus.value === 'AUTORIZADO') ? 'block' : 'none';
+                    });
+                }
+            },
             preConfirm: () => {
                 const art = document.getElementById('swal-art').value;
                 if (!art) return Swal.showValidationMessage('Ingresa el artículo');
-                return {
+                
+                const res = {
                     status: document.getElementById('swal-status').value,
                     descripcionArt: art.toUpperCase(),
                     comentarios: document.getElementById('swal-com').value.toUpperCase()
+                };
+
+                // Agregar campos extra si es Color Center
+                if (esColorCenter) {
+                    res.codigoRefaccion = document.getElementById('swal-codigo').value.toUpperCase();
+                    if (res.status === 'AUTORIZADO') {
+                        res.costoRefaccion = document.getElementById('swal-costo').value;
+                    }
                 }
+                return res;
             }
         });
+
         if (formValues) {
-            await push(seguimientoRef, { folio, ...formValues, fechaRegistro: new Date().toISOString(), usuario: window.nombreSesion });
+            document.getElementById("loader").style.display = "flex";
+            await push(seguimientoRef, { 
+                folio, 
+                ...formValues, 
+                fechaRegistro: new Date().toISOString(), 
+                usuario: window.nombreSesion 
+            });
+            document.getElementById("loader").style.display = "none";
             Swal.fire("Éxito", "Actualizado", "success");
         }
-    };
-
+    };    
     window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
         const zon = document.getElementById("zona").value;
