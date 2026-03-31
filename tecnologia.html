@@ -142,7 +142,7 @@
                 <thead class="table-primary">
                     <tr>
                         <th>Folio</th><th>Empresa</th><th>Zona</th><th>Sucursal</th>
-                        <th>Tipo</th><th>Archivo</th><th>Status</th><th>Tiempo</th><th>Acciones</th>
+                        <th>Tipo</th><th>Monto</th><th>Archivo</th><th>Status</th><th>Tiempo</th><th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tablaTecBody"></tbody>
@@ -231,6 +231,7 @@
                     <td>${s.zona}</td>
                     <td>${s.sucursal}</td>
                     <td><span class="badge ${esLocal ? 'bg-warning text-dark' : 'bg-secondary'}">${s.colorCenter ? 'COLOR CENTER' : (esLocal ? 'LOCAL' : 'COMPRAS')}</span></td>
+                   <td class="fw-bold text-success">${s.montoRefaccion ? '$' + s.montoRefaccion : '-'}</td>
                     <td><button class="btn btn-sm btn-success" onclick="verPDF('${s.archivoData}', '${s.folio}')">👁️</button></td>
                     <td><span class="badge ${badgeClass} p-2 w-100">${statusActual}</span></td>
                     <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
@@ -547,27 +548,41 @@ window.exportarExcel = async () => {
         }
     };
 // 👉 OPCIONES DE STATUS LOCAL COLORCENTER
-    window.modalSegLocal = async (id, folio) => {
-        const historialPrevio = globalSeguimientos.filter(x => x.folio === folio).sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
-        const articuloExistente = historialPrevio.length > 0 ? historialPrevio[0].descripcionArt : "";
-        const esPrimerSeguimiento = historialPrevio.length === 0;
+   window.modalSegLocal = async (id, folio) => {
+        const snap = await get(ref(database, `tecnologia/${id}`));
+        const data = snap.val();
+        
+        const historialPrevio = globalSeguimientos.filter(x => x.folio === folio);
+        const articuloExistente = historialPrevio.length > 0 ? (historialPrevio[0].descripcionArt || "") : "";
+
         const { value: formValues } = await Swal.fire({
-            title: `Seguimiento Local<br><small class="text-muted">Folio: ${folio}</small>`,
+            title: `Seguimiento Local`,
             html: `
                 <div class="text-start" style="font-size: 14px;">
                     <label class="fw-bold mb-1">Estado</label>
                     <select id="swal-status" class="form-select mb-3">
                         <option value="PENDIENTE">PENDIENTE</option>
                         <option value="EN COTIZACION">EN COTIZACION</option>
-                        <option value="COMPARATIVO">COMPARATIVO</option>
                         <option value="AUTORIZADO">AUTORIZADO</option>
                         <option value="EN ZONA">EN ZONA</option>
                         <option value="NO AUTORIZADO">NO AUTORIZADO</option>
                     </select>
+
+                    ${(data.colorCenter && !data.codigoRefaccion) ? `
+                        <label class="fw-bold mb-1">Código de Refacción (Única vez)</label>
+                        <input id="swal-codigo" class="form-control mb-3 text-uppercase" placeholder="INGRESE CÓDIGO">
+                    ` : (data.codigoRefaccion ? `<p class="mb-2 small"><b>Código:</b> ${data.codigoRefaccion}</p>` : '')}
+
+                    <div id="monto-container" style="display:none;">
+                        <label class="fw-bold mb-1">Monto de Refacción (Única vez)</label>
+                        <input id="swal-monto" type="number" class="form-control mb-3" placeholder="0.00" ${data.montoRefaccion ? 'disabled' : ''} value="${data.montoRefaccion || ''}">
+                    </div>
+
                     <label class="fw-bold mb-1">Artículo / Equipo</label>
-                    <input id="swal-art" class="form-control mb-3 text-uppercase" value="${articuloExistente}" ${!esPrimerSeguimiento ? 'readonly' : ''}>
+                    <input id="swal-art" class="form-control mb-3 text-uppercase" value="${articuloExistente}" ${articuloExistente ? 'readonly' : ''}>
+                    
                     <label class="fw-bold mb-1">Observaciones</label>
-                    <textarea id="swal-com" class="form-control text-uppercase" style="height: 100px;"></textarea>
+                    <textarea id="swal-com" class="form-control text-uppercase" style="height: 80px;"></textarea>
                 </div>
             `,
             showCancelButton: true,
