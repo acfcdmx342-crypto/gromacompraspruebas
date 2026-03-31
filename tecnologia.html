@@ -203,9 +203,6 @@
                 const data = doc.val();
                 if(!data.eliminado) globalSolicitudes.push({ ...data, id: doc.key }); 
             });
-            renderTable(sSnap);
-        });
-    });
     function obtenerPrecioPorFolio(folio){
     const registros = globalSeguimientos
         .filter(x => x.folio === folio && x.precioRefaccion);
@@ -687,48 +684,60 @@ precio = precio ? parseFloat(precio) : null;
 }
 // 👉 guarda solicitud    
     window.guardarSolicitud = async () => {
-        const emp = document.getElementById("empresa").value;
-        const zon = document.getElementById("zona").value;
-        const suc = document.getElementById("sucursal").value;
-        const arc = document.getElementById("archivo").files[0];
-       const localCheck = document.getElementById("checkLocal").checked;
-const centerCheck = document.getElementById("checkCenter").checked;
-// 👉 SI ES LOCAL O COLOR CENTER
-const local = localCheck || centerCheck;
-const colorCenter = centerCheck;
-        if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
-        document.getElementById("loader").style.display = "flex";
+    const emp = document.getElementById("empresa").value;
+    const zon = document.getElementById("zona").value;
+    const suc = document.getElementById("sucursal").value;
+    const arc = document.getElementById("archivo").files[0];
+    
+    // Captura de los nuevos checks
+    const isLocal = document.getElementById("checkLocal").checked;
+    const isColorCenter = document.getElementById("colorCenter").checked;
+    const isUrgente = document.getElementById("urgente").checked;
+
+    if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Completa todos los campos obligatorios", "error");
+
+    document.getElementById("loader").style.display = "flex";
+
+    try {
         const snap = await get(solicitudesRef);
-        let contador = 1;
-        if (snap.exists()) {
-             contador = Object.keys(snap.val()).length + 1;
-        }
+        const contador = snap.exists() ? Object.keys(snap.val()).length + 1 : 1;
+
         const reader = new FileReader();
         reader.onload = async () => {
             const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
+            
+            // Lógica de Tipo Corregida
+            let tipoFinal = "COMPRAS";
+            if (isColorCenter) tipoFinal = "COLOR CENTER";
+            else if (isLocal) tipoFinal = "LOCAL";
+
             await push(solicitudesRef, {
-                folio: fol, 
-                empresa: emp.toUpperCase(), 
-                zona: zon.toUpperCase(), 
+                folio: fol,
+                empresa: emp.toUpperCase(),
+                zona: zon.toUpperCase(),
                 sucursal: suc.toUpperCase(),
-                soporte: window.nombreSesion, 
-                puesto: window.puestoSesion,
-                archivoData: reader.result, 
-                status: local ? "PENDIENTE" : "EN COTIZACION", 
-                solicitudLocal: local,
-                isLocal: local,
-                colorCenter:colorCenter,
+                soporte: window.nombreSesion,
+                archivoData: reader.result,
+                tipo: tipoFinal,
+                urgente: isUrgente,
+                status: (isLocal || isColorCenter) ? "EN COTIZACION" : "PENDIENTE",
                 fechaISO: new Date().toISOString(),
-                usuario: window.usuarioSesion, 
+                usuario: window.usuarioSesion,
                 eliminado: false
             });
+
             document.getElementById("formTec").reset();
-            document.getElementById("preview-container").innerHTML = '<small class="text-muted">Vista previa</small>';
+            document.getElementById("preview-container").innerHTML = "";
             document.getElementById("loader").style.display = "none";
-            Swal.fire("Éxito", "Solicitud guardada correctamente", "success");
+            Swal.fire("Éxito", `Solicitud ${fol} registrada correctamente`, "success");
         };
         reader.readAsDataURL(arc);
-    };
+    } catch (error) {
+        console.error("Error al guardar:", error);
+        document.getElementById("loader").style.display = "none";
+        Swal.fire("Error", "No se pudo conectar con la base de datos", "error");
+    }
+};
     window.verPDF = (base64, folio) => {
         const w = window.open();
         w.document.write(`<iframe src="${base64}" title="${folio}" style="width:100%; height:100%; border:none;"></iframe>`);
