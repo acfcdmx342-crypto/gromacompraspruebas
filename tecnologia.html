@@ -366,7 +366,6 @@ window.exportarExcel = async () => {
     a.click();
     window.URL.revokeObjectURL(url);
 };  
-
     window.editarRegistro = async (idKey) => {
         try {
             const docRef = ref(database, `tecnologia/${idKey}`);
@@ -408,7 +407,6 @@ window.exportarExcel = async () => {
             Swal.fire("Error", "No se pudo actualizar el registro", "error");
         }
     };
-
     window.confirmarEntrega = async (idKey, folio) => {
         const { value: formValues } = await Swal.fire({
             title: 'Confirmar Entrega',
@@ -452,7 +450,6 @@ window.exportarExcel = async () => {
                 });
             }
         });
-
         if (formValues) {
             document.getElementById("loader").style.display = "flex";
             try {
@@ -499,7 +496,6 @@ window.exportarExcel = async () => {
             }
         }
     };
-
     window.enviarDevolucion = async (idKey, folio) => {
         const { value: formValues } = await Swal.fire({
             title: 'Reportar Devolución',
@@ -591,7 +587,6 @@ window.exportarExcel = async () => {
         title: `Seguimiento Local<br><small class="text-muted">Folio: ${folio}</small>`,
         html: `
             <div class="text-start" style="font-size: 14px;">
-
                 <label class="fw-bold mb-1">Estado</label>
                 <select id="swal-status" class="form-select mb-3">
                    <option value="PENDIENTE">PENDIENTE</option>
@@ -607,12 +602,10 @@ window.exportarExcel = async () => {
                         value="${codigoExistente || ''}"
                         ${!esPrimerSeguimiento ? 'readonly' : ''}>
                 ` : ''}
-
                 <label class="fw-bold mb-1">Artículo / Equipo</label>
                 <input id="swal-art" class="form-control mb-3 text-uppercase"
                     value="${articuloExistente}"
                     ${!esPrimerSeguimiento ? 'readonly' : ''}>
-
                 <div id="contenedor-precio" style="display:none;">
                     <label class="fw-bold mb-1">Precio Refacción</label>
                     <input id="swal-precio" type="text" class="form-control mb-3" placeholder="$0.00">
@@ -623,21 +616,17 @@ window.exportarExcel = async () => {
         `,
         showCancelButton: true,
         confirmButtonText: '💾 Guardar',
-
         didOpen: () => {
             const statusSelect = document.getElementById("swal-status");
             const contPrecio = document.getElementById("contenedor-precio");
 const inputPrecio = document.getElementById("swal-precio");
 inputPrecio.addEventListener("input", (e) => {
     let valor = e.target.value.replace(/[^0-9]/g, ""); // solo números
-
     if(valor === ""){
         e.target.value = "";
         return;
     }
-
     let numero = parseFloat(valor) / 100;
-
     e.target.value = numero.toLocaleString("es-MX", {
         style: "currency",
         currency: "MXN"
@@ -653,34 +642,25 @@ if(precioExistente){
                     contPrecio.style.display = "none";
                 }
             };
-
             statusSelect.addEventListener("change", togglePrecio);
             togglePrecio();
         },
-
         preConfirm: () => {
-
             const status = document.getElementById('swal-status').value;
             const art = document.getElementById('swal-art').value;
-
             const codigo = esColorCenter ? document.getElementById('swal-codigo')?.value : null;
            let precioTexto = document.getElementById('swal-precio')?.value || "";
-
 let precio = precioTexto.replace(/[^0-9.-]+/g, ""); // quitar $ y comas
 precio = precio ? parseFloat(precio) : null;
-
             if (!art) return Swal.showValidationMessage('Ingresa el artículo');
-
             // 🔴 VALIDACIÓN CÓDIGO
             if (esColorCenter && esPrimerSeguimiento && !codigo) {
                 return Swal.showValidationMessage('Ingresa el código de refacción');
             }
-
             // 🔴 VALIDACIÓN PRECIO
             if (esColorCenter && status === "AUTORIZADO" && !precio) {
                 return Swal.showValidationMessage('Ingresa el precio de la refacción');
             }
-
             return {
                 status,
                 descripcionArt: art.toUpperCase(),
@@ -690,16 +670,13 @@ precio = precio ? parseFloat(precio) : null;
             }
         }
     });
-
     if (formValues) {
         await push(seguimientoRef, {
             folio,
             ...formValues,
             fechaRegistro: new Date().toISOString(),
             usuario: window.nombreSesion
-            
         });
-
         Swal.fire("Éxito", "Actualizado", "success");
     }
 };
@@ -752,12 +729,10 @@ const colorCenter = centerCheck;
         };
         reader.readAsDataURL(arc);
     };
-
     window.verPDF = (base64, folio) => {
         const w = window.open();
         w.document.write(`<iframe src="${base64}" title="${folio}" style="width:100%; height:100%; border:none;"></iframe>`);
     };
-
     window.verHistorial = (fol) => {
         const h = globalSeguimientos.filter(x => x.folio === fol).sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
         if(h.length === 0) return Swal.fire("Aviso", "No hay historial para este folio", "info");
@@ -777,7 +752,6 @@ const colorCenter = centerCheck;
             width: '800px' 
         });
     };
-
     window.previewArchivo = (input) => {
         if(!input.files[0]) return;
         const reader = new FileReader();
@@ -801,14 +775,12 @@ window.rechazarSolicitud = async (idKey, folio) => {
             return value.toUpperCase();
         }
     });
-
     if (motivo) {
         document.getElementById("loader").style.display = "flex";
         try {
             const solRef = ref(database, `tecnologia/${idKey}`);
             const snap = await get(solRef);
             const datosSolicitud = snap.val();
-
             const datosHistorial = {
                 ...datosSolicitud,
                 status: "RECHAZADO / NO AUTORIZADO",
@@ -816,12 +788,10 @@ window.rechazarSolicitud = async (idKey, folio) => {
                 comentarios: motivo,
                 usuarioFinalizo: window.nombreSesion
             };
-
             // 1. Guardar en historial permanente
             await push(historialPermanenteRef, datosHistorial);
             // 2. Eliminar de la tabla de procesos (solicitudes activas)
             await remove(solRef);
-
             document.getElementById("loader").style.display = "none";
             Swal.fire("Finalizado", "El registro ha sido movido al historial", "success");
         } catch (error) {
@@ -834,7 +804,6 @@ window.rechazarSolicitud = async (idKey, folio) => {
     window.cerrarSesion = () => { localStorage.clear(); location.href = "index.html"; };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 </script> 
 </body>
 </html>
