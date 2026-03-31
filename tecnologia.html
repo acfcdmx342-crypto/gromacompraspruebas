@@ -616,6 +616,7 @@ window.exportarExcel = async () => {
         if (formValues) {
             await push(seguimientoRef, { folio, ...formValues, fechaRegistro: new Date().toISOString(), usuario: window.nombreSesion });
             Swal.fire("Éxito", "Actualizado", "success");
+        }
     };
 
     window.guardarSolicitud = async () => {
