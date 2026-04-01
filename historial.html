@@ -193,6 +193,16 @@ async function cargarHistorial() {
 
        snapPerm.forEach(c => {
             const s = c.val();
+           // 1. Extraemos el tipo. Si no existe, ponemos "TECNOLOGÍA" por defecto
+    const tipoReal = (s.tipo || "TECNOLOGÍA").toUpperCase();
+// 2. Lógica para el color del costo (solo si es Color Center)
+    const esColorCenter = tipoReal === "COLOR CENTER";
+    const valorCosto = esColorCenter 
+        ? `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}` 
+        : "---"; // O vacío si prefieres
+// 3. Clase para la celda de costo
+    const claseCosto = esColorCenter ? "fw-bold text-success" : "text-muted";
+           
             const soporteAsignado = (s.soporte || "").toUpperCase();
             const usuarioCreador = (s.usuario || "").toUpperCase();
             
