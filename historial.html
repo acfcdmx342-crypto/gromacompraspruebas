@@ -247,15 +247,11 @@ async function cargarHistorial() {
             }
 
             // --- CORRECCIÓN LÓGICA DE TIPO ---
-          // En historial.html, dentro de cargarHistorial()
-const tipoReal = (s.tipo || "S/N").toUpperCase(); // Cambia "COMPRAS" por "S/N" para detectar si falta el dato
-const esColorCenter = tipoReal === "COLOR CENTER";
+           const tipoReal = (s.tipo || "COMPRAS").toUpperCase();
+            const esColorCenter = tipoReal === "COLOR CENTER";
+            const valorCosto = esColorCenter ? `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}` : "";
+            const claseCosto = esColorCenter ? "fw-bold text-success" : "cell-dark-grey";
 
-
-// Si quieres que el costo se vea en otros tipos además de Color Center, ajusta aquí:
-const valorCosto = (esColorCenter || esTecnologia) 
-    ? `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}` 
-    : "";
             datosParaExportar.push({ 
                 folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, tipo: tipoReal, costo: s.costo || 0, status: s.status || 'FINALIZADO', motivo, tiempo: tiempoEntrega 
             });
