@@ -246,13 +246,14 @@ async function cargarHistorial() {
                     : fechaCierreRaw.split(' ')[0];
             }
 
-            // Lógica para el campo Costo
-            const esColorCenter = (s.tipo || "").toUpperCase() === "COLOR CENTER";
+            // --- CORRECCIÓN LÓGICA DE TIPO ---
+            const tipoReal = (s.tipo || "COMPRAS").toUpperCase();
+            const esColorCenter = tipoReal === "COLOR CENTER";
             const valorCosto = esColorCenter ? `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}` : "";
             const claseCosto = esColorCenter ? "fw-bold text-success" : "cell-dark-grey";
 
             datosParaExportar.push({ 
-                folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, tipo: s.tipo || 'N/A', costo: s.costo || 0, status: s.status || 'FINALIZADO', motivo, tiempo: tiempoEntrega 
+                folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, tipo: tipoReal, costo: s.costo || 0, status: s.status || 'FINALIZADO', motivo, tiempo: tiempoEntrega 
             });
 
             body.innerHTML += `
@@ -260,7 +261,7 @@ async function cargarHistorial() {
                     <td class="fw-bold">${s.folio}</td>
                     <td>${s.empresa || '---'}</td>
                     <td>${s.sucursal || '---'}</td>
-                    <td class="small fw-bold">${s.tipo || 'COMPRAS'}</td>
+                    <td class="small fw-bold">${tipoReal}</td>
                     <td class="${claseCosto}">${valorCosto}</td>
                     <td><span class="badge ${badgeClass}"><i class="fa-solid ${iconBadge} me-1"></i>${s.status || 'FINALIZADO'}</span></td>
                     <td class="small text-start">${motivo}</td>
