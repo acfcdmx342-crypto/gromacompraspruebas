@@ -188,21 +188,27 @@ async function cargarHistorial() {
         
         if (!snapPerm.exists()) {
             body.innerHTML = "<tr><td colspan='12'>No hay registros</td></tr>";
+            window.ocultarCargando();
             return;
         }
 
-       snapPerm.forEach(c => {
+        snapPerm.forEach(c => {
             const s = c.val();
-           // 1. Extraemos el tipo. Si no existe, ponemos "TECNOLOGÍA" por defecto
-    const tipoReal = (s.tipo || "TECNOLOGÍA").toUpperCase();
-// 2. Lógica para el color del costo (solo si es Color Center)
-    const esColorCenter = tipoReal === "COLOR CENTER";
-    const valorCosto = esColorCenter 
-        ? `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}` 
-        : "---"; // O vacío si prefieres
-// 3. Clase para la celda de costo
-    const claseCosto = esColorCenter ? "fw-bold text-success" : "text-muted";
-           
+            
+            // --- LÓGICA DE TIPO Y COSTO (UNIFICADA) ---
+            const tipoReal = (s.tipo || "TECNOLOGÍA").toUpperCase();
+            const esColorCenter = tipoReal === "COLOR CENTER";
+            
+            let valorCosto = "---";
+            let claseCosto = "text-muted";
+
+            if(esColorCenter){
+                valorCosto = `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+                claseCosto = "fw-bold text-success";
+            } else {
+                claseCosto = "cell-dark-grey";
+            }
+
             const soporteAsignado = (s.soporte || "").toUpperCase();
             const usuarioCreador = (s.usuario || "").toUpperCase();
             
@@ -256,12 +262,6 @@ async function cargarHistorial() {
                     : fechaCierreRaw.split(' ')[0];
             }
 
-            // --- CORRECCIÓN LÓGICA DE TIPO ---
-           const tipoReal = (s.tipo || "COMPRAS").toUpperCase();
-            const esColorCenter = tipoReal === "COLOR CENTER";
-            const valorCosto = esColorCenter ? `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}` : "";
-            const claseCosto = esColorCenter ? "fw-bold text-success" : "cell-dark-grey";
-
             datosParaExportar.push({ 
                 folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, tipo: tipoReal, costo: s.costo || 0, status: s.status || 'FINALIZADO', motivo, tiempo: tiempoEntrega 
             });
@@ -275,7 +275,7 @@ async function cargarHistorial() {
                     <td class="${claseCosto}">${valorCosto}</td>
                     <td><span class="badge ${badgeClass}"><i class="fa-solid ${iconBadge} me-1"></i>${s.status || 'FINALIZADO'}</span></td>
                     <td class="small text-start">${motivo}</td>
-                   
+                    
                     <td>${fotoAMostrar ? `<img src="${fotoAMostrar}" width="40" height="40" class="img-preview shadow-sm" onclick="window.verFoto('${fotoAMostrar}', '${s.folio}')">` : '---'}</td>
                     <td>
                         <button onclick="window.verPDF('${s.archivoData}')" class="btn btn-sm btn-secondary ${!s.archivoData ? 'disabled' : ''}">
