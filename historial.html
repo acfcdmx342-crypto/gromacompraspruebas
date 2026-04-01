@@ -30,16 +30,17 @@
             align-items: center; flex-direction: column; 
         }
 
+        /* Clase para celda gris oscuro */
+        .cell-dark-grey { background-color: #495057 !important; color: #495057 !important; }
+
         /* --- CORRECCIÓN MODO OSCURO --- */
         body.dark-mode { background: #121416 !important; color: #ffffff; }
         body.dark-mode .card { background: #1d1f21 !important; color: #ffffff; border: 1px solid #333; }
         body.dark-mode .table { color: #ffffff !important; border-color: #444 !important; }
         
-        /* Cabecera de tabla en modo oscuro */
         body.dark-mode .table thead { background-color: #000 !important; }
         body.dark-mode .table thead th { color: #0d6efd !important; border-bottom: 2px solid #333; }
         
-        /* Filas dinámicas en modo oscuro */
         body.dark-mode .st-eliminado { background-color: #44272a !important; color: #ffbabb !important; }
         body.dark-mode .st-confirmado { background-color: #1e3028 !important; color: #a3cfbb !important; }
         body.dark-mode .st-pendiente { background-color: #332b00 !important; color: #ffe69c !important; }
@@ -91,6 +92,8 @@
                         <th>Folio</th>
                         <th>Empresa</th>
                         <th>Sucursal</th>
+                        <th>Tipo</th>
+                        <th>Costo</th>
                         <th>Status Final</th>
                         <th>Motivo/Comentario</th>
                         <th>Evidencia</th> 
@@ -184,7 +187,7 @@ async function cargarHistorial() {
         datosParaExportar = [];
         
         if (!snapPerm.exists()) {
-            body.innerHTML = "<tr><td colspan='10'>No hay registros</td></tr>";
+            body.innerHTML = "<tr><td colspan='12'>No hay registros</td></tr>";
             return;
         }
 
@@ -196,6 +199,7 @@ async function cargarHistorial() {
             if (!puedeVerTodo) {
                 if (soporteAsignado !== nombreSesion && usuarioCreador !== nombreSesion) return; 
             }
+
             const segsRaw = s.seguimientos || [];
             const segs = Array.isArray(segsRaw) ? segsRaw : Object.values(segsRaw);
             const estaEliminado = s.status === "ELIMINADO" || s.eliminado === true;
@@ -216,7 +220,6 @@ async function cargarHistorial() {
                 ? (s.fechaDepuracion || "---") 
                 : (segConf?.fechaRegistro || s.fechaCierre || "---");
             
-            // --- INICIO DE CAMBIO SUGERIDO PARA FECHAS ---
             let fInicio = s.fechaISO ? new Date(s.fechaISO) : limpiarFecha(s.fechaEnvio);
             let fFin = limpiarFecha(fechaCierreRaw);
             let tiempoEntrega = "N/A";
@@ -227,7 +230,6 @@ async function cargarHistorial() {
                 tiempoEntrega = dias > 0 ? `${dias}d ${horas}h` : horas > 0 ? `${horas}h ${mins}m` : `${mins}m`;
             }
 
-            // Formateo de Fecha Registro para la tabla
             let fechaRegistroAMostrar = "---";
             if (s.fechaISO) {
                 fechaRegistroAMostrar = new Date(s.fechaISO).toLocaleString('es-MX', {
@@ -237,17 +239,20 @@ async function cargarHistorial() {
                 fechaRegistroAMostrar = s.fechaEnvio || s.fechaRegistro;
             }
 
-            // Formateo de Fecha Cierre para la tabla
             let fechaCierreBonita = "---";
             if (fechaCierreRaw !== "---") {
                 fechaCierreBonita = fechaCierreRaw.includes('T') 
                     ? new Date(fechaCierreRaw).toLocaleDateString('es-MX') 
                     : fechaCierreRaw.split(' ')[0];
             }
-            // --- FIN DE CAMBIO SUGERIDO ---
+
+            // Lógica para el campo Costo
+            const esColorCenter = (s.tipo || "").toUpperCase() === "COLOR CENTER";
+            const valorCosto = esColorCenter ? `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}` : "";
+            const claseCosto = esColorCenter ? "fw-bold text-success" : "cell-dark-grey";
 
             datosParaExportar.push({ 
-                folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, status: s.status || 'FINALIZADO', motivo, tiempo: tiempoEntrega 
+                folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, tipo: s.tipo || 'N/A', costo: s.costo || 0, status: s.status || 'FINALIZADO', motivo, tiempo: tiempoEntrega 
             });
 
             body.innerHTML += `
@@ -255,6 +260,8 @@ async function cargarHistorial() {
                     <td class="fw-bold">${s.folio}</td>
                     <td>${s.empresa || '---'}</td>
                     <td>${s.sucursal || '---'}</td>
+                    <td class="small fw-bold">${s.tipo || 'COMPRAS'}</td>
+                    <td class="${claseCosto}">${valorCosto}</td>
                     <td><span class="badge ${badgeClass}"><i class="fa-solid ${iconBadge} me-1"></i>${s.status || 'FINALIZADO'}</span></td>
                     <td class="small text-start">${motivo}</td>
                    
@@ -281,9 +288,9 @@ window.verFoto = (url, folio) => Swal.fire({ title: `Evidencia - ${folio}`, imag
 
 window.descargarExcel = () => {
     if (window.esSoporteJR) return;
-    let csvContent = "\uFEFFLine,Folio,Empresa,Sucursal,Status,Motivo,Tiempo\n";
+    let csvContent = "\uFEFFLine,Folio,Empresa,Sucursal,Tipo,Costo,Status,Motivo,Tiempo\n";
     datosParaExportar.forEach((d, i) => {
-        csvContent += `${i+1},"${d.folio}","${d.empresa}","${d.sucursal}","${d.status}","${d.motivo.replace(/"/g, '""')}","${d.tiempo}"\n`;
+        csvContent += `${i+1},"${d.folio}","${d.empresa}","${d.sucursal}","${d.tipo}","${d.costo}","${d.status}","${d.motivo.replace(/"/g, '""')}","${d.tiempo}"\n`;
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
