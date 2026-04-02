@@ -112,33 +112,11 @@
                         <th>Tiempo</th> 
                     </tr>
                 </thead>
-`;
-    seguimientos.forEach(s => {
-        contenido += `
-            <tr>
-                <td><small>${s.fechaRegistro || '---'}</small></td>
-                <td><span class="badge bg-info">${s.status || '---'}</span></td>
-                <td>
-                    <b>ART:</b> ${s.articulo || '---'}<br>
-                    <b>OBS:</b> ${s.comentarios || '---'}
-                </td>
-            </tr>
-        `;
-    });
-    contenido += `</tbody></table></div>`;
-    Swal.fire({
-        title: `Historial ${folio}`,
-        html: contenido,
-        width: '700px',
-        confirmButtonText: 'Cerrar'
-    });
-};
               <tbody id="historialBody"></tbody>
             </table>
         </div>
     </div>
 </div>
-
 <script>
     const btnMode = document.getElementById('btnDarkMode');
     const iconMode = btnMode.querySelector('i');
@@ -356,7 +334,44 @@ window.descargarExcel = () => {
     link.download = `Historial_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 };
+// --- se agrega  ---
+    window.verHistorialModal = (seguimientos, folio) => {
 
+    let contenido = `
+        <div style="max-height:300px; overflow:auto;">
+            <table class="table table-sm text-start">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Status</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    seguimientos.forEach(s => {
+        contenido += `
+            <tr>
+                <td><small>${s.fechaRegistro || '---'}</small></td>
+                <td><span class="badge bg-info">${s.status || '---'}</span></td>
+                <td>
+                    <b>ART:</b> ${s.articulo || '---'}<br>
+                    <b>OBS:</b> ${s.comentarios || '---'}
+                </td>
+            </tr>
+        `;
+    });
+
+    contenido += `</tbody></table></div>`;
+
+    Swal.fire({
+        title: `Historial ${folio}`,
+        html: contenido,
+        width: '700px',
+        confirmButtonText: 'Cerrar'
+    });
+};
 </script>
 </body>
 </html>
