@@ -132,59 +132,9 @@
         aplicarTema(isDark);
     };
 </script>
+
 <script type="module">
 import { database, ref, onValue, get } from "./firebase.js";
-
-/* 🔥 NUEVO: FUNCIÓN PARA RESUMIR TEXTO */
-function resumirTexto(texto, limite = 50) {
-    if (!texto) return "---";
-    return texto.length > limite 
-        ? texto.substring(0, limite) + "..." 
-        : texto;
-}
-
-/* 🔥 NUEVO: MODAL DE HISTORIAL COMPLETO */
-window.verHistorialCompleto = (seguimientos, folio) => {
-    if (!seguimientos || seguimientos.length === 0) {
-        return Swal.fire("Aviso", "No hay historial disponible", "info");
-    }
-
-    const lista = Array.isArray(seguimientos) 
-        ? seguimientos 
-        : Object.values(seguimientos);
-
-    const ordenado = lista.sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
-
-    let rows = ordenado.map(i => `
-        <tr>
-            <td>${new Date(i.fechaRegistro).toLocaleString()}</td>
-            <td><span class="badge bg-info">${i.status}</span></td>
-            <td>
-                <b>ART:</b> ${i.descripcionArt || '-'}<br>
-                <b>OBS:</b> ${i.comentarios || '-'}
-            </td>
-        </tr>
-    `).join('');
-
-    Swal.fire({
-        title: `Historial ${folio}`,
-        html: `
-            <div class="table-responsive">
-                <table class="table table-sm small">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Status</th>
-                            <th>Detalle</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        `,
-        width: '800px'
-    });
-};
 
 const sesionRaw = localStorage.getItem("usuarioLogueado");
 if (!sesionRaw) location.href = "index.html";
@@ -245,21 +195,20 @@ async function cargarHistorial() {
         snapPerm.forEach(c => {
             const s = c.val();
             
+            // --- LÓGICA DE TIPO Y COSTO (UNIFICADA) ---
             const tipoReal = (s.tipo || (s.colorCenter ? "COLOR CENTER" : (s.solicitudLocal ? "LOCAL" : "COMPRAS"))).toUpperCase();
             const esColorCenter = tipoReal === "COLOR CENTER";
             let valorCosto = "---";
             let claseCosto = "text-muted";
-
-            if(esColorCenter && s.costo){
-                valorCosto = `$${parseFloat(s.costo).toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
-                claseCosto = "fw-bold text-success";
-            } else if(esColorCenter){
-                valorCosto = "PENDIENTE";
-                claseCosto = "text-warning fw-bold";
-            } else {
-                claseCosto = "cell-dark-grey";
-            }
-
+           if(esColorCenter && s.costo){
+    valorCosto = `$${parseFloat(s.costo).toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+    claseCosto = "fw-bold text-success";
+} else if(esColorCenter){
+    valorCosto = "PENDIENTE";
+    claseCosto = "text-warning fw-bold";
+} else {
+    claseCosto = "cell-dark-grey";
+}
             const soporteAsignado = (s.soporte || "").toUpperCase();
             const usuarioCreador = (s.usuario || "").toUpperCase();
             
@@ -277,11 +226,9 @@ async function cargarHistorial() {
             let badgeClass = estaEliminado ? 'badge-del' : (s.status === "PENDIENTE" ? 'badge-warn' : 'badge-ok');
             let iconBadge = estaEliminado ? 'fa-trash-can' : (s.status === "PENDIENTE" ? 'fa-clock' : 'fa-check-double');
             
-            let motivoCompleto = estaEliminado 
+            let motivo = estaEliminado 
                 ? `❌ ELIMINADO: ${s.motivoEliminacion || "SIN MOTIVO"}` 
                 : (segConf?.comentarios || s.comentarios || "ENTREGA REALIZADA");
-
-            let motivoCorto = resumirTexto(motivoCompleto, 50);
 
             let fotoAMostrar = segConf?.evidenciaImagen || s.evidenciaImagen || segConf?.fotoEvidencia || s.evidenciaFoto;
 
@@ -316,7 +263,7 @@ async function cargarHistorial() {
             }
 
             datosParaExportar.push({ 
-                folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, tipo: tipoReal, costo: s.costo || 0, status: s.status || 'FINALIZADO', motivo: motivoCompleto, tiempo: tiempoEntrega 
+                folio: s.folio, empresa: s.empresa, sucursal: s.sucursal, tipo: tipoReal, costo: s.costo || 0, status: s.status || 'FINALIZADO', motivo, tiempo: tiempoEntrega 
             });
 
             body.innerHTML += `
@@ -327,15 +274,8 @@ async function cargarHistorial() {
                     <td class="small fw-bold">${tipoReal}</td>
                     <td class="${claseCosto}">${valorCosto}</td>
                     <td><span class="badge ${badgeClass}"><i class="fa-solid ${iconBadge} me-1"></i>${s.status || 'FINALIZADO'}</span></td>
-
-                    <!-- 🔥 NUEVO: MOTIVO CON CLICK -->
-                    <td class="small text-start">
-                        <span style="cursor:pointer; color:#0d6efd;"
-                            onclick='verHistorialCompleto(${JSON.stringify(segs).replace(/'/g, "&apos;")}, "${s.folio}")'>
-                            <i class="fa-solid fa-comment-dots me-1"></i>${motivoCorto}
-                        </span>
-                    </td>
-
+                    <td class="small text-start">${motivo}</td>
+                    
                     <td>${fotoAMostrar ? `<img src="${fotoAMostrar}" width="40" height="40" class="img-preview shadow-sm" onclick="window.verFoto('${fotoAMostrar}', '${s.folio}')">` : '---'}</td>
                     <td>
                         <button onclick="window.verPDF('${s.archivoData}')" class="btn btn-sm btn-secondary ${!s.archivoData ? 'disabled' : ''}">
