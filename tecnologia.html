@@ -656,12 +656,17 @@ window.exportarExcel = async () => {
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
-       const localCheck = document.getElementById("checkLocal").checked;
-// 👉 cambios antes del push
+        const localCheck = document.getElementById("checkLocal").checked;
+        const centerCheck = document.getElementById("checkCenter").checked;
+// 👉 SI ES LOCAL O COLOR CENTER
+const local = localCheck || centerCheck;
+const colorCenter = centerCheck;
+
+// 👉 DEFINICIÓN CORRECTA DEL TIPO
 let tipo = "COMPRAS";
 if (colorCenter) tipo = "COLOR CENTER";
 else if (local) tipo = "LOCAL";
-const centerCheck = document.getElementById("checkCenter").checked;
+ 
 // 👉 SI ES LOCAL O COLOR CENTER
 const local = localCheck || centerCheck;
 const colorCenter = centerCheck;
