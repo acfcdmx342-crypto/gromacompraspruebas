@@ -657,6 +657,10 @@ window.exportarExcel = async () => {
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
        const localCheck = document.getElementById("checkLocal").checked;
+// 👉 cambios antes del push
+let tipo = "COMPRAS";
+if (colorCenter) tipo = "COLOR CENTER";
+else if (local) tipo = "LOCAL";
 const centerCheck = document.getElementById("checkCenter").checked;
 // 👉 SI ES LOCAL O COLOR CENTER
 const local = localCheck || centerCheck;
@@ -680,6 +684,7 @@ const colorCenter = centerCheck;
                 puesto: window.puestoSesion,
                 archivoData: reader.result, 
                 status: local ? "PENDIENTE" : "EN COTIZACION", 
+                 tipo: tipo,  // 🔥 AQUÍ ESTÁ LA CLAVE
                 solicitudLocal: local,
                 isLocal: local,
                 colorCenter:colorCenter,
