@@ -458,6 +458,7 @@ window.exportarExcel = async () => {
                     fechaCierre: new Date().toISOString(),
                     evidenciaImagen: formValues.img,
                     comentarios: formValues.mot,
+                    costo: h.length > 0 ? (h[h.length - 1].costoRefaccion || 0) : 0,
                     seguimientos: {
                         ...(datosSolicitud.seguimientos || {}),
                         final: nuevoSeguimiento
