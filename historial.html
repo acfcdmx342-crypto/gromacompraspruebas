@@ -52,13 +52,15 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: 0.3s;
         }
-     .motivo-truncado {
-    max-width: 250px;
+
+.motivo-texto {
+    max-width: 220px;
+    display: inline-block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    cursor: pointer;
-}   
+    vertical-align: middle;
+}
     </style>
     <script>
         if(localStorage.getItem('themeSeguimiento') === 'dark') {
@@ -110,7 +112,29 @@
                         <th>Tiempo</th> 
                     </tr>
                 </thead>
-                <tbody id="historialBody"></tbody>
+  // --- se agrega esto hastahastla linea 136 ---              
+ `;
+    seguimientos.forEach(s => {
+        contenido += `
+            <tr>
+                <td><small>${s.fechaRegistro || '---'}</small></td>
+                <td><span class="badge bg-info">${s.status || '---'}</span></td>
+                <td>
+                    <b>ART:</b> ${s.articulo || '---'}<br>
+                    <b>OBS:</b> ${s.comentarios || '---'}
+                </td>
+            </tr>
+        `;
+    });
+    contenido += `</tbody></table></div>`;
+    Swal.fire({
+        title: `Historial ${folio}`,
+        html: contenido,
+        width: '700px',
+        confirmButtonText: 'Cerrar'
+    });
+};
+              <tbody id="historialBody"></tbody>
             </table>
         </div>
     </div>
@@ -281,9 +305,18 @@ async function cargarHistorial() {
                     <td class="small fw-bold">${tipoReal}</td>
                     <td class="${claseCosto}">${valorCosto}</td>
                     <td><span class="badge ${badgeClass}"><i class="fa-solid ${iconBadge} me-1"></i>${s.status || 'FINALIZADO'}</span></td>
-                    <td class="small text-start motivo-truncado" title="Ver detalle" onclick="window.verMotivoCompleto(` + "`" + `${motivo}` + "`" + `)">
-                    ${motivo}
-                    </td>                    
+ // --- cambio de mmotivo
+      <td class="small text-start">
+    <span class="motivo-texto">${motivo}</span>
+    
+    ${segs.length > 0 ? `
+        <i class="fa-solid fa-ellipsis ms-2 text-primary" 
+           style="cursor:pointer;"
+           title="Ver historial"
+           onclick="window.verHistorialModal(${JSON.stringify(segs).replace(/"/g, '&quot;')}, '${s.folio}')">
+        </i>
+    ` : ''}
+</td>                             
                     <td>${fotoAMostrar ? `<img src="${fotoAMostrar}" width="40" height="40" class="img-preview shadow-sm" onclick="window.verFoto('${fotoAMostrar}', '${s.folio}')">` : '---'}</td>
                     <td>
                         <button onclick="window.verPDF('${s.archivoData}')" class="btn btn-sm btn-secondary ${!s.archivoData ? 'disabled' : ''}">
