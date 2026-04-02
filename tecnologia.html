@@ -207,7 +207,6 @@ onValue(solicitudesRef, sSnap => {
     });
     renderTable(sSnap);
 });
-    });
     function renderTable(snap) {
         const tbody = document.getElementById("tablaTecBody");
         tbody.innerHTML = ""; 
@@ -659,7 +658,8 @@ window.exportarExcel = async () => {
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
-
+        const localCheck = document.getElementById("checkLocal").checked;
+        const centerCheck = document.getElementById("checkCenter").checked;
 // 👉 SI ES LOCAL O COLOR CENTER
 const local = localCheck || centerCheck;
 const colorCenter = centerCheck;
