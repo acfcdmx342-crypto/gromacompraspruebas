@@ -339,10 +339,15 @@ window.descargarExcel = () => {
     link.download = `Historial_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 };
-// --- JS  ---
+// --- JS CORRECTO ---
+
 window.verHistorialDesdeElemento = (el) => {
     const seguimientos = JSON.parse(decodeURIComponent(el.dataset.segs));
     const folio = el.dataset.folio;
+
+    window.verHistorialModal(seguimientos, folio);
+};
+
 window.verHistorialModal = (seguimientos, folio) => {
 
     let contenido = `
@@ -379,7 +384,6 @@ window.verHistorialModal = (seguimientos, folio) => {
         width: '700px',
         confirmButtonText: 'Cerrar'
     });
-};      
-
+};
 </body>
 </html>
