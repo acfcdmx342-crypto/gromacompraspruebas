@@ -451,7 +451,12 @@ window.exportarExcel = async () => {
                     fechaRegistro: new Date().toISOString(), 
                     usuario: window.nombreSesion
                 };
-                const datosHistorial = {
+const todosSeguimientos = globalSeguimientos
+    .filter(x => x.folio === folio)
+    .sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
+    // agregar el último (confirmado)
+todosSeguimientos.push(nuevoSeguimiento);
+const datosHistorial = {
                     ...datosSolicitud,
                     status: "CONFIRMADO",
                     fechaISO: fechaOriginal,
@@ -460,11 +465,9 @@ window.exportarExcel = async () => {
                     evidenciaImagen: formValues.img,
                     comentarios: formValues.mot,
                     costo: h.length > 0 ? (h[h.length - 1].costoRefaccion || 0) : 0,
-                    seguimientos: {
-                        ...(datosSolicitud.seguimientos || {}),
-                        final: nuevoSeguimiento
-                    }
-                };
+// 🔥 AQUÍ EL CAMBIO IMPORTANTE
+seguimientos: todosSeguimientos
+ };
                 await push(historialPermanenteRef, datosHistorial);
                 await push(seguimientoRef, nuevoSeguimiento);
                 await remove(solRef);
@@ -788,13 +791,17 @@ window.rechazarSolicitud = async (idKey, folio) => {
             const solRef = ref(database, `tecnologia/${idKey}`);
             const snap = await get(solRef);
             const datosSolicitud = snap.val();
-
+const todosSeguimientos = globalSeguimientos
+    .filter(x => x.folio === folio)
+    .sort((a,b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
+            
             const datosHistorial = {
                 ...datosSolicitud,
                 status: "RECHAZADO / NO AUTORIZADO",
                 tipo: datosSolicitud.tipo || "TECNOLOGÍA",
                 fechaCierre: new Date().toISOString(),
                 comentarios: motivo,
+                 seguimientos: todosSeguimientos,
                 usuarioFinalizo: window.nombreSesion
             };
 
