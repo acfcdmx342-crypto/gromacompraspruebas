@@ -223,14 +223,17 @@ async function cargarHistorial() {
             if (!puedeVerTodo) {
                 if (soporteAsignado !== nombreSesion && usuarioCreador !== nombreSesion) return; 
             }
+const segsRaw = s.seguimientos || [];
+const segs = Array.isArray(segsRaw) 
+    ? segsRaw 
+    : Object.values(segsRaw);
 
-            const segsRaw = s.seguimientos || [];
-            const segs = Array.isArray(segsRaw) ? segsRaw : Object.values(segsRaw);
-            const estaEliminado = s.status === "ELIMINADO" || s.eliminado === true;
-           
-            const segConf = segs.find(x => x.status === "CONFIRMADO");
+// 🔥 ORDENAR POR FECHA (para ver todo correctamente)
+segs.sort((a, b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
             
-            let claseFila = estaEliminado ? "st-eliminado" : (s.status === "PENDIENTE" ? "st-pendiente" : "st-confirmado");
+            const estaEliminado = s.status === "ELIMINADO" || s.eliminado === true;
+            const segConf = segs.find(x => x.status === "CONFIRMADO");
+           let claseFila = estaEliminado ? "st-eliminado" : (s.status === "PENDIENTE" ? "st-pendiente" : "st-confirmado");
             let badgeClass = estaEliminado ? 'badge-del' : (s.status === "PENDIENTE" ? 'badge-warn' : 'badge-ok');
             let iconBadge = estaEliminado ? 'fa-trash-can' : (s.status === "PENDIENTE" ? 'fa-clock' : 'fa-check-double');
             
@@ -287,11 +290,13 @@ async function cargarHistorial() {
     <span class="motivo-texto">${motivo}</span>
     
     ${segs.length > 0 ? `
-        <i class="fa-solid fa-ellipsis ms-2 text-primary" 
-           style="cursor:pointer;"
-           title="Ver historial"
-           onclick="window.verHistorialModal(${JSON.stringify(segs).replace(/"/g, '&quot;')}, '${s.folio}')">
-        </i>
+   <i class="fa-solid fa-ellipsis ms-2 text-primary"
+   style="cursor:pointer;"
+   title="Ver historial"
+   data-segs='${JSON.stringify(segs)}'
+   data-folio="${s.folio}"
+   onclick="window.verHistorialDesdeElemento(this)">
+</i>
     ` : ''}
 </td>                             
                     <td>${fotoAMostrar ? `<img src="${fotoAMostrar}" width="40" height="40" class="img-preview shadow-sm" onclick="window.verFoto('${fotoAMostrar}', '${s.folio}')">` : '---'}</td>
@@ -335,8 +340,11 @@ window.descargarExcel = () => {
     link.click();
 };
 // --- se agrega  ---
-    window.verHistorialModal = (seguimientos, folio) => {
-
+window.verHistorialDesdeElemento = (el) => {
+    const seguimientos = JSON.parse(el.dataset.segs);
+    const folio = el.dataset.folio;
+      
+window.verHistorialModal = (seguimientos, folio) => {
     let contenido = `
         <div style="max-height:300px; overflow:auto;">
             <table class="table table-sm text-start">
@@ -349,7 +357,6 @@ window.descargarExcel = () => {
                 </thead>
                 <tbody>
     `;
-
     seguimientos.forEach(s => {
         contenido += `
             <tr>
