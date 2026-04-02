@@ -196,19 +196,19 @@ async function cargarHistorial() {
             const s = c.val();
             
             // --- LÓGICA DE TIPO Y COSTO (UNIFICADA) ---
-            const tipoReal = (s.tipo || "TECNOLOGÍA").toUpperCase();
+            const tipoReal = (s.tipo || (s.colorCenter ? "COLOR CENTER" : (s.solicitudLocal ? "LOCAL" : "COMPRAS"))).toUpperCase();
             const esColorCenter = tipoReal === "COLOR CENTER";
-            
             let valorCosto = "---";
             let claseCosto = "text-muted";
-
-            if(esColorCenter){
-                valorCosto = `$${parseFloat(s.costo || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
-                claseCosto = "fw-bold text-success";
-            } else {
-                claseCosto = "cell-dark-grey";
-            }
-
+           if(esColorCenter && s.costo){
+    valorCosto = `$${parseFloat(s.costo).toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
+    claseCosto = "fw-bold text-success";
+} else if(esColorCenter){
+    valorCosto = "PENDIENTE";
+    claseCosto = "text-warning fw-bold";
+} else {
+    claseCosto = "cell-dark-grey";
+}
             const soporteAsignado = (s.soporte || "").toUpperCase();
             const usuarioCreador = (s.usuario || "").toUpperCase();
             
