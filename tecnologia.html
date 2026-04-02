@@ -657,8 +657,7 @@ window.exportarExcel = async () => {
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
-        const localCheck = document.getElementById("checkLocal").checked;
-        const centerCheck = document.getElementById("checkCenter").checked;
+
 // 👉 SI ES LOCAL O COLOR CENTER
 const local = localCheck || centerCheck;
 const colorCenter = centerCheck;
@@ -668,9 +667,6 @@ let tipo = "COMPRAS";
 if (colorCenter) tipo = "COLOR CENTER";
 else if (local) tipo = "LOCAL";
  
-// 👉 SI ES LOCAL O COLOR CENTER
-const local = localCheck || centerCheck;
-const colorCenter = centerCheck;
         if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
         document.getElementById("loader").style.display = "flex";
         const snap = await get(solicitudesRef);
