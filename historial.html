@@ -232,20 +232,20 @@ const segs = Array.isArray(segsRaw)
 segs.sort((a, b) => new Date(a.fechaRegistro) - new Date(b.fechaRegistro));
             
             const estaEliminado = s.status === "ELIMINADO" || s.eliminado === true;
-            const segConf = segs.find(x => x.status === "CONFIRMADO");
+            const ultimoSeg = segs.length > 0 ? segs[segs.length - 1] : null;
            let claseFila = estaEliminado ? "st-eliminado" : (s.status === "PENDIENTE" ? "st-pendiente" : "st-confirmado");
             let badgeClass = estaEliminado ? 'badge-del' : (s.status === "PENDIENTE" ? 'badge-warn' : 'badge-ok');
             let iconBadge = estaEliminado ? 'fa-trash-can' : (s.status === "PENDIENTE" ? 'fa-clock' : 'fa-check-double');
             
             let motivo = estaEliminado 
                 ? `❌ ELIMINADO: ${s.motivoEliminacion || "SIN MOTIVO"}` 
-                : (segConf?.comentarios || s.comentarios || "ENTREGA REALIZADA");
+                : (ultimoSeg?.comentarios || s.comentarios || "ENTREGA REALIZADA");
 
-            let fotoAMostrar = segConf?.evidenciaImagen || s.evidenciaImagen || segConf?.fotoEvidencia || s.evidenciaFoto;
+            let fotoAMostrar = ultimoSeg?.evidenciaImagen || s.evidenciaImagen;
 
             let fechaCierreRaw = estaEliminado 
                 ? (s.fechaDepuracion || "---") 
-                : (segConf?.fechaRegistro || s.fechaCierre || "---");
+                : (ultimoSeg?.fechaRegistro || s.fechaCierre || "---");
             
             let fInicio = s.fechaISO ? new Date(s.fechaISO) : limpiarFecha(s.fechaEnvio);
             let fFin = limpiarFecha(fechaCierreRaw);
