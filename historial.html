@@ -369,9 +369,24 @@ window.verHistorialModal = (seguimientos, folio) => {
                 <td><small>${s.fechaRegistro || '---'}</small></td>
                 <td><span class="badge bg-info">${s.status || '---'}</span></td>
                 <td>
-                    <b>ART:</b> ${s.articulo || '---'}<br>
-                    <b>OBS:</b> ${s.comentarios || '---'}
-                </td>
+    <b>ART:</b> ${s.descripcionArt || '---'}<br>
+
+    ${s.codigoRefaccion ? `<b>CÓDIGO:</b> ${s.codigoRefaccion}<br>` : ''}
+
+    ${s.costoRefaccion ? 
+        `<b>COSTO:</b> $${parseFloat(s.costoRefaccion).toLocaleString('es-MX', {minimumFractionDigits: 2})}<br>` 
+        : ''
+    }
+
+    <b>OBS:</b> ${s.comentarios || '---'}
+
+    ${s.evidenciaImagen ? `
+        <br>
+        <a href="#" onclick="Swal.fire({imageUrl: '${s.evidenciaImagen}', imageWidth: 400})">
+            Ver evidencia
+        </a>
+    ` : ''}
+</td>
             </tr>
         `;
     });
