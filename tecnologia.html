@@ -703,6 +703,7 @@ else if (local) tipo = "LOCAL";
             document.getElementById("preview-container").innerHTML = '<small class="text-muted">Vista previa</small>';
             document.getElementById("loader").style.display = "none";
             Swal.fire("Éxito", "Solicitud guardada correctamente", "success");
+            renderTable({ forEach: (cb) => globalSolicitudes.forEach(s => cb({ val: () => s })) });
         };
         reader.readAsDataURL(arc);
     };
