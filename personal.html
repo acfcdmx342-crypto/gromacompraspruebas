@@ -222,8 +222,10 @@ async function cargarCCTV(){
 async function editarStock(id,a,m,mo,c,e){
     let articulo = prompt("Artículo", a);
     let marca = prompt("Marca", m);
-
-    await updateDoc(doc(db,"stock",id), {
+    let articulo = prompt("Modelo", mo);
+    let marca = prompt("Costo", c);
+    let articulo = prompt("Estado", e);
+   await updateDoc(doc(db,"stock",id), {
         articulo, marca, modelo: mo, costo: c, estado: e
     });
 
