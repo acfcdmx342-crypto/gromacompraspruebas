@@ -56,7 +56,33 @@ window.updateDoc = updateDoc;
 
 </div>
 
+<!-- 🔥 MODAL -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Registro</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" id="contenidoModal"></div>
+
+      <div class="modal-footer">
+        <button class="btn btn-success" onclick="guardarEdicion()">Guardar</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
+
+let editId = "";
+let editTipo = "";
 
 function cargar(modulo){
 
@@ -165,7 +191,7 @@ function cargar(modulo){
     }
 }
 
-// ================= FUNCIONES =================
+// ================= CARGAS =================
 
 async function cargarStock(){
     const datos = await getDocs(collection(db, "stock"));
@@ -218,31 +244,65 @@ async function cargarCCTV(){
     $('#tablaCCTV tbody').html(html);
 }
 
-// EDITAR
-async function editarStock(id,a,m,mo,c,e){
-    let articulo = prompt("Artículo", a);
-    let marca = prompt("Marca", m);
-    let articulo = prompt("Modelo", mo);
-    let marca = prompt("Costo", c);
-    let articulo = prompt("Estado", e);
-   await updateDoc(doc(db,"stock",id), {
-        articulo, marca, modelo: mo, costo: c, estado: e
-    });
+// ================= EDITAR =================
 
-    cargarStock();
+function editarStock(id,a,m,mo,c,e){
+    editId = id;
+    editTipo = "stock";
+
+    $('#contenidoModal').html(`
+        <input class="form-control mb-2" id="editArticulo" value="${a}">
+        <input class="form-control mb-2" id="editMarca" value="${m}">
+        <input class="form-control mb-2" id="editModelo" value="${mo}">
+        <input class="form-control mb-2" id="editCosto" value="${c}">
+        <input class="form-control mb-2" id="editEstado" value="${e}">
+    `);
+
+    new bootstrap.Modal(document.getElementById('modalEditar')).show();
 }
 
-async function editarCCTV(id,n,z,s,se){
-    let negocio = prompt("Negocio", n);
+function editarCCTV(id,n,z,s,se){
+    editId = id;
+    editTipo = "cctv";
 
-    await updateDoc(doc(db,"cctv",id), {
-        negocio, zona: z, sucursal: s, serie: se
-    });
+    $('#contenidoModal').html(`
+        <input class="form-control mb-2" id="editNegocio" value="${n}">
+        <input class="form-control mb-2" id="editZona" value="${z}">
+        <input class="form-control mb-2" id="editSucursal" value="${s}">
+        <input class="form-control mb-2" id="editSerie" value="${se}">
+    `);
 
-    cargarCCTV();
+    new bootstrap.Modal(document.getElementById('modalEditar')).show();
 }
 
-// ELIMINAR
+async function guardarEdicion(){
+
+    if(editTipo === "stock"){
+        await updateDoc(doc(db,"stock",editId), {
+            articulo: $('#editArticulo').val(),
+            marca: $('#editMarca').val(),
+            modelo: $('#editModelo').val(),
+            costo: $('#editCosto').val(),
+            estado: $('#editEstado').val()
+        });
+        cargarStock();
+    }
+
+    if(editTipo === "cctv"){
+        await updateDoc(doc(db,"cctv",editId), {
+            negocio: $('#editNegocio').val(),
+            zona: $('#editZona').val(),
+            sucursal: $('#editSucursal').val(),
+            serie: $('#editSerie').val()
+        });
+        cargarCCTV();
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
+}
+
+// ================= ELIMINAR =================
+
 async function eliminar(col,id,recargar){
     if(confirm("¿Eliminar registro?")){
         await deleteDoc(doc(db,col,id));
