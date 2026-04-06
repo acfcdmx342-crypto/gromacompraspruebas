@@ -32,9 +32,7 @@ window.deleteDoc = deleteDoc;
 window.doc = doc;
 window.updateDoc = updateDoc;
 </script>
-
 </head>
-
 <body>
 
 <div class="d-flex">
@@ -42,8 +40,6 @@ window.updateDoc = updateDoc;
 <!-- MENÚ -->
 <div class="bg-dark text-white p-3" style="width:260px; min-height:100vh;">
     <h6>CATÁLOGOS</h6>
-<button class="btn btn-danger w-100" onclick="cerrarSesion()">
-    <i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
     <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">SEGUIMIENTO</a>
     <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">STOCK / RESGUARDO</a>
     <a href="#" class="text-white d-block" onclick="cargar('cctv')">SUCURSALES CCTV</a>
@@ -52,6 +48,8 @@ window.updateDoc = updateDoc;
 <!-- CONTENIDO -->
 <div class="flex-grow-1 p-4">
     <h3>Bienvenido</h3>
+  <div><button class="btn btn-danger w-100" onclick="cerrarSesion()">
+    <i class="bi bi-box-arrow-right"></i> Cerrar sesión</button></div>
     <div id="contenido"></div>
 </div>
 
@@ -97,7 +95,6 @@ function cargar(modulo){
         $('#contenido').html(`
         <div class="card p-3">
             <h4>Stock</h4>
-
             <form id="formStock" class="row g-2 mb-3">
                 <div class="col-md"><input class="form-control" placeholder="Artículo" id="articulo"></div>
                 <div class="col-md"><input class="form-control" placeholder="Marca" id="marca"></div>
@@ -106,7 +103,6 @@ function cargar(modulo){
                 <div class="col-md"><input class="form-control" placeholder="Estado" id="estado"></div>
                 <div class="col-md"><button class="btn btn-primary w-100">Guardar</button></div>
             </form>
-
             <div class="table-responsive">
                 <table class="table table-bordered" id="tablaStock">
                     <thead>
