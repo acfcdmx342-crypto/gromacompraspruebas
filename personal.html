@@ -33,6 +33,7 @@ window.doc = doc;
 window.updateDoc = updateDoc;
 </script>
 </head>
+
 <body>
 
 <div class="d-flex">
@@ -52,20 +53,17 @@ window.updateDoc = updateDoc;
     <!-- 🔥 HEADER GLOBAL -->
     <div id="headerGlobal" class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
 
-        <h5 class="mb-0">Bienvenido</h5>
+        <!-- 👤 USUARIO -->
+        <div>
+            <div class="fw-bold" id="usuarioNombre">USUARIO DE PRUEBAS</div>
+            <small id="usuarioPuesto">SOPORTE TECNICO JR</small>
+        </div>
 
+        <!-- 🌙 + CERRAR -->
         <div class="d-flex align-items-center gap-3">
 
-            <!-- 🌙 MODO -->
             <i class="bi bi-sun-fill" style="cursor:pointer" onclick="toggleModo()"></i>
 
-            <!-- 👤 USUARIO -->
-            <div class="text-end">
-                <div class="fw-bold" id="usuarioNombre">USUARIO DE PRUEBAS</div>
-                <small id="usuarioPuesto">SOPORTE TECNICO JR</small>
-            </div>
-
-            <!-- 🔴 CERRAR -->
             <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesion()">
                 <i class="bi bi-box-arrow-right"></i>
             </button>
@@ -112,22 +110,29 @@ function toggleModo(){
     document.body.classList.toggle("text-white");
 }
 
+// 🔥 CONTROL HEADER
+function controlarHeader(modulo){
+    const header = document.getElementById("headerGlobal");
+
+    if(modulo === "tecnologia.html"){
+        header.style.display = "none"; // ❌ ocultar en seguimiento
+    } else {
+        header.style.display = "flex"; // ✅ mostrar en demás módulos
+    }
+}
+
 let editId = "";
 let editTipo = "";
 
 function cargar(modulo){
 
-    let header = document.getElementById("headerGlobal");
+    controlarHeader(modulo);
 
-    // 🔴 SI ES HTML (SEGUIMIENTO)
+    // 🔴 SEGUIMIENTO
     if(modulo.includes('.html')){
         $("#contenido").load(modulo);
-        header.style.display = "none"; // ocultar header
         return;
     }
-
-    // 🟢 MOSTRAR HEADER EN LOS DEMÁS
-    header.style.display = "flex";
 
     // ================= STOCK =================
     if(modulo === 'stock'){
@@ -142,21 +147,20 @@ function cargar(modulo){
                 <div class="col-md"><input class="form-control" placeholder="Estado" id="estado"></div>
                 <div class="col-md"><button class="btn btn-primary w-100">Guardar</button></div>
             </form>
-            <div class="table-responsive">
-                <table class="table table-bordered" id="tablaStock">
-                    <thead>
-                        <tr>
-                            <th>Artículo</th>
-                            <th>Marca</th>
-                            <th>Modelo</th>
-                            <th>Costo</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+
+            <table class="table table-bordered" id="tablaStock">
+                <thead>
+                    <tr>
+                        <th>Artículo</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Costo</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
         `);
 
@@ -192,20 +196,18 @@ function cargar(modulo){
                 <div class="col-md"><button class="btn btn-primary w-100">Guardar</button></div>
             </form>
 
-            <div class="table-responsive">
-                <table class="table table-bordered" id="tablaCCTV">
-                    <thead>
-                        <tr>
-                            <th>Negocio</th>
-                            <th>Zona</th>
-                            <th>Sucursal</th>
-                            <th>Serie</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <table class="table table-bordered" id="tablaCCTV">
+                <thead>
+                    <tr>
+                        <th>Negocio</th>
+                        <th>Zona</th>
+                        <th>Sucursal</th>
+                        <th>Serie</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
         `);
 
@@ -227,7 +229,7 @@ function cargar(modulo){
     }
 }
 
-// ================= RESTO IGUAL =================
+// ================= FUNCIONES =================
 
 async function cargarStock(){
     const datos = await getDocs(collection(db, "stock"));
@@ -274,6 +276,15 @@ async function cargarCCTV(){
     $('#tablaCCTV tbody').html(html);
 }
 
+// ================= ELIMINAR =================
+async function eliminar(col,id,recargar){
+    if(confirm("¿Eliminar registro?")){
+        await deleteDoc(doc(db,col,id));
+        recargar();
+    }
+}
+
+// ================= CERRAR SESIÓN =================
 function cerrarSesion(){
     if(confirm("¿Cerrar sesión?")){
         localStorage.clear();
