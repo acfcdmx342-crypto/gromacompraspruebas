@@ -6,30 +6,31 @@
 <title>Sistema Soporte</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCVPisdfwemquRfbszsIZRkHz72bCeUCNE",
   authDomain: "stock-f43d4.firebaseapp.com",
-  projectId: "stock-f43d4",
-  storageBucket: "stock-f43d4.firebasestorage.app",
-  messagingSenderId: "417599448643",
-  appId: "1:417599448643:web:6374a5c6545a4459d456f6"
+  projectId: "stock-f43d4"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 👉 hacer global
 window.db = db;
 window.collection = collection;
 window.addDoc = addDoc;
 window.getDocs = getDocs;
+window.deleteDoc = deleteDoc;
+window.doc = doc;
+window.updateDoc = updateDoc;
 </script>
 
 </head>
@@ -38,28 +39,20 @@ window.getDocs = getDocs;
 
 <div class="d-flex">
 
-    <!-- MENÚ IZQUIERDO -->
-    <div class="bg-dark text-white p-3" style="width:260px; min-height:100vh;">
-        <h6>CATÁLOGOS</h6>
+<!-- MENÚ -->
+<div class="bg-dark text-white p-3" style="width:260px; min-height:100vh;">
+    <h6>CATÁLOGOS</h6>
 
-        <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">
-            SEGUIMIENTO
-        </a>
+    <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">SEGUIMIENTO</a>
+    <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">STOCK / RESGUARDO</a>
+    <a href="#" class="text-white d-block" onclick="cargar('cctv')">SUCURSALES CCTV</a>
+</div>
 
-        <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">
-            STOCK / RESGUARDO
-        </a>
-
-        <a href="#" class="text-white d-block" onclick="cargar('cctv')">
-            SUCURSALES CCTV
-        </a>
-    </div>
-
-    <!-- CONTENIDO -->
-    <div class="flex-grow-1 p-4">
-        <h3>Bienvenido al Sistema</h3>
-        <div id="contenido"></div>
-    </div>
+<!-- CONTENIDO -->
+<div class="flex-grow-1 p-4">
+    <h3>Bienvenido</h3>
+    <div id="contenido"></div>
+</div>
 
 </div>
 
@@ -72,23 +65,22 @@ function cargar(modulo){
         return;
     }
 
-    // =========================
-    // STOCK
-    // =========================
+    // ================= STOCK =================
     if(modulo === 'stock'){
         $('#contenido').html(`
-            <div class="card p-4">
-                <h4>Stock / Resguardo</h4>
+        <div class="card p-3">
+            <h4>Stock</h4>
 
-                <form id="formStock" class="row g-2 mb-3">
-                    <div class="col"><input class="form-control" placeholder="Artículo" id="articulo"></div>
-                    <div class="col"><input class="form-control" placeholder="Marca" id="marca"></div>
-                    <div class="col"><input class="form-control" placeholder="Modelo" id="modelo"></div>
-                    <div class="col"><input class="form-control" placeholder="Costo" id="costo"></div>
-                    <div class="col"><input class="form-control" placeholder="Estado" id="estado"></div>
-                    <div class="col"><button class="btn btn-primary">Guardar</button></div>
-                </form>
+            <form id="formStock" class="row g-2 mb-3">
+                <div class="col-md"><input class="form-control" placeholder="Artículo" id="articulo"></div>
+                <div class="col-md"><input class="form-control" placeholder="Marca" id="marca"></div>
+                <div class="col-md"><input class="form-control" placeholder="Modelo" id="modelo"></div>
+                <div class="col-md"><input class="form-control" placeholder="Costo" id="costo"></div>
+                <div class="col-md"><input class="form-control" placeholder="Estado" id="estado"></div>
+                <div class="col-md"><button class="btn btn-primary w-100">Guardar</button></div>
+            </form>
 
+            <div class="table-responsive">
                 <table class="table table-bordered" id="tablaStock">
                     <thead>
                         <tr>
@@ -97,11 +89,13 @@ function cargar(modulo){
                             <th>Modelo</th>
                             <th>Costo</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
+        </div>
         `);
 
         cargarStock();
@@ -109,39 +103,34 @@ function cargar(modulo){
         $('#formStock').submit(async function(e){
             e.preventDefault();
 
-            let data = {
+            await addDoc(collection(db, "stock"), {
                 articulo: $('#articulo').val(),
                 marca: $('#marca').val(),
                 modelo: $('#modelo').val(),
                 costo: $('#costo').val(),
-                estado: $('#estado').val(),
-                fecha: new Date()
-            };
+                estado: $('#estado').val()
+            });
 
-            await addDoc(collection(db, "stock"), data);
-
-            alert("Guardado en la nube ✅");
             this.reset();
             cargarStock();
         });
     }
 
-    // =========================
-    // CCTV
-    // =========================
+    // ================= CCTV =================
     if(modulo === 'cctv'){
         $('#contenido').html(`
-            <div class="card p-4">
-                <h4>Suc CCTV</h4>
+        <div class="card p-3">
+            <h4>CCTV</h4>
 
-                <form id="formCCTV" class="row g-2 mb-3">
-                    <div class="col"><input class="form-control" placeholder="Negocio" id="negocio"></div>
-                    <div class="col"><input class="form-control" placeholder="Zona" id="zona"></div>
-                    <div class="col"><input class="form-control" placeholder="Sucursal" id="sucursal"></div>
-                    <div class="col"><input class="form-control" placeholder="Serie" id="serie"></div>
-                    <div class="col"><button class="btn btn-primary">Guardar</button></div>
-                </form>
+            <form id="formCCTV" class="row g-2 mb-3">
+                <div class="col-md"><input class="form-control" placeholder="Negocio" id="negocio"></div>
+                <div class="col-md"><input class="form-control" placeholder="Zona" id="zona"></div>
+                <div class="col-md"><input class="form-control" placeholder="Sucursal" id="sucursal"></div>
+                <div class="col-md"><input class="form-control" placeholder="Serie" id="serie"></div>
+                <div class="col-md"><button class="btn btn-primary w-100">Guardar</button></div>
+            </form>
 
+            <div class="table-responsive">
                 <table class="table table-bordered" id="tablaCCTV">
                     <thead>
                         <tr>
@@ -149,11 +138,13 @@ function cargar(modulo){
                             <th>Zona</th>
                             <th>Sucursal</th>
                             <th>Serie</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
+        </div>
         `);
 
         cargarCCTV();
@@ -165,58 +156,96 @@ function cargar(modulo){
                 negocio: $('#negocio').val(),
                 zona: $('#zona').val(),
                 sucursal: $('#sucursal').val(),
-                serie: $('#serie').val(),
-                fecha: new Date()
+                serie: $('#serie').val()
             });
 
-            alert("Guardado en la nube ✅");
             this.reset();
             cargarCCTV();
         });
     }
 }
 
-// =========================
-// FUNCIONES FIREBASE
-// =========================
+// ================= FUNCIONES =================
 
 async function cargarStock(){
-    const querySnapshot = await getDocs(collection(db, "stock"));
+    const datos = await getDocs(collection(db, "stock"));
     let html = "";
 
-    querySnapshot.forEach((doc) => {
-        let d = doc.data();
+    datos.forEach(d => {
+        let data = d.data();
         html += `
-            <tr>
-                <td>${d.articulo}</td>
-                <td>${d.marca}</td>
-                <td>${d.modelo}</td>
-                <td>${d.costo}</td>
-                <td>${d.estado}</td>
-            </tr>
-        `;
+        <tr>
+            <td>${data.articulo}</td>
+            <td>${data.marca}</td>
+            <td>${data.modelo}</td>
+            <td>${data.costo}</td>
+            <td>${data.estado}</td>
+            <td>
+                <i class="bi bi-pencil-square text-primary me-2" style="cursor:pointer"
+                   onclick="editarStock('${d.id}', '${data.articulo}', '${data.marca}', '${data.modelo}', '${data.costo}', '${data.estado}')"></i>
+
+                <i class="bi bi-trash text-danger" style="cursor:pointer"
+                   onclick="eliminar('stock','${d.id}',cargarStock)"></i>
+            </td>
+        </tr>`;
     });
 
     $('#tablaStock tbody').html(html);
 }
 
 async function cargarCCTV(){
-    const querySnapshot = await getDocs(collection(db, "cctv"));
+    const datos = await getDocs(collection(db, "cctv"));
     let html = "";
 
-    querySnapshot.forEach((doc) => {
-        let d = doc.data();
+    datos.forEach(d => {
+        let data = d.data();
         html += `
-            <tr>
-                <td>${d.negocio}</td>
-                <td>${d.zona}</td>
-                <td>${d.sucursal}</td>
-                <td>${d.serie}</td>
-            </tr>
-        `;
+        <tr>
+            <td>${data.negocio}</td>
+            <td>${data.zona}</td>
+            <td>${data.sucursal}</td>
+            <td>${data.serie}</td>
+            <td>
+                <i class="bi bi-pencil-square text-primary me-2" style="cursor:pointer"
+                   onclick="editarCCTV('${d.id}', '${data.negocio}', '${data.zona}', '${data.sucursal}', '${data.serie}')"></i>
+
+                <i class="bi bi-trash text-danger" style="cursor:pointer"
+                   onclick="eliminar('cctv','${d.id}',cargarCCTV)"></i>
+            </td>
+        </tr>`;
     });
 
     $('#tablaCCTV tbody').html(html);
+}
+
+// EDITAR
+async function editarStock(id,a,m,mo,c,e){
+    let articulo = prompt("Artículo", a);
+    let marca = prompt("Marca", m);
+
+    await updateDoc(doc(db,"stock",id), {
+        articulo, marca, modelo: mo, costo: c, estado: e
+    });
+
+    cargarStock();
+}
+
+async function editarCCTV(id,n,z,s,se){
+    let negocio = prompt("Negocio", n);
+
+    await updateDoc(doc(db,"cctv",id), {
+        negocio, zona: z, sucursal: s, serie: se
+    });
+
+    cargarCCTV();
+}
+
+// ELIMINAR
+async function eliminar(col,id,recargar){
+    if(confirm("¿Eliminar registro?")){
+        await deleteDoc(doc(db,col,id));
+        recargar();
+    }
 }
 
 </script>
