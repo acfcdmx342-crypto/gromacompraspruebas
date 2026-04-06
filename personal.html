@@ -42,7 +42,8 @@ window.updateDoc = updateDoc;
 <!-- MENÚ -->
 <div class="bg-dark text-white p-3" style="width:260px; min-height:100vh;">
     <h6>CATÁLOGOS</h6>
-
+<button class="btn btn-danger w-100" onclick="cerrarSesion()">
+    <i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
     <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">SEGUIMIENTO</a>
     <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">STOCK / RESGUARDO</a>
     <a href="#" class="text-white d-block" onclick="cargar('cctv')">SUCURSALES CCTV</a>
@@ -309,7 +310,19 @@ async function eliminar(col,id,recargar){
         recargar();
     }
 }
+// ================= CERRARSESION =================
+function cerrarSesion(){
+    if(confirm("¿Cerrar sesión?")){
+        
+        // 🔥 Si usas almacenamiento local (opcional)
+        localStorage.clear();
+        sessionStorage.clear();
 
+        // 🔄 Redirige al login o index
+        window.location.href = "index.html";
+    }
+}
+  
 </script>
 
 </body>
