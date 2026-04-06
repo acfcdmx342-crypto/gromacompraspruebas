@@ -1,16 +1,13 @@
-<!-- =========================================
-SISTEMA MULTIUSUARIO (SOLO HTML + JS DEMO)
-Simulación frontend (sin backend)
-========================================= -->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema Soporte</title>
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 
 <body>
@@ -21,9 +18,17 @@ Simulación frontend (sin backend)
     <div class="bg-dark text-white p-3" style="width:260px; min-height:100vh;">
         <h6>CATÁLOGOS</h6>
 
-        <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">Seguimiento</a>
-        <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">Stock / Resguardo</a>
-        <a href="#" class="text-white d-block" onclick="cargar('cctv')">Suc CCTV</a>
+        <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">
+            Seguimiento
+        </a>
+
+        <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">
+            Stock / Resguardo
+        </a>
+
+        <a href="#" class="text-white d-block" onclick="cargar('cctv')">
+            Suc CCTV
+        </a>
     </div>
 
     <!-- CONTENIDO -->
@@ -32,18 +37,23 @@ Simulación frontend (sin backend)
         <div id="contenido"></div>
     </div>
 
-    </div>
+</div>
 
 <script>
 
-let rol = "admin"; // cambiar a "jr" para simular restricción
+let rol = "admin"; // cambiar a "jr" si quieres simular restricción
 
 function cargar(modulo){
 
-    function cargar(ruta){
-    $("#contenido").load(ruta);
-}
+    // ✅ CARGA ARCHIVO HTML EXTERNO
+    if(modulo.includes('.html')){
+        $("#contenido").load(modulo);
+        return;
+    }
 
+    // =========================
+    // STOCK
+    // =========================
     if(modulo === 'stock'){
         $('#contenido').html(`
             <div class="card p-4">
@@ -91,6 +101,9 @@ function cargar(modulo){
         });
     }
 
+    // =========================
+    // CCTV
+    // =========================
     if(modulo === 'cctv'){
         $('#contenido').html(`
             <div class="card p-4">
