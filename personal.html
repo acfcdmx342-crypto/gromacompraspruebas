@@ -50,7 +50,7 @@ window.updateDoc = updateDoc;
 <div class="flex-grow-1">
 
     <!-- 🔥 HEADER GLOBAL -->
-    <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
+    <div id="headerGlobal" class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
 
         <h5 class="mb-0">Bienvenido</h5>
 
@@ -117,10 +117,17 @@ let editTipo = "";
 
 function cargar(modulo){
 
+    let header = document.getElementById("headerGlobal");
+
+    // 🔴 SI ES HTML (SEGUIMIENTO)
     if(modulo.includes('.html')){
         $("#contenido").load(modulo);
+        header.style.display = "none"; // ocultar header
         return;
     }
+
+    // 🟢 MOSTRAR HEADER EN LOS DEMÁS
+    header.style.display = "flex";
 
     // ================= STOCK =================
     if(modulo === 'stock'){
