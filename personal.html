@@ -8,6 +8,30 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<!-- 🔥 FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCVPisdfwemquRfbszsIZRkHz72bCeUCNE",
+  authDomain: "stock-f43d4.firebaseapp.com",
+  projectId: "stock-f43d4",
+  storageBucket: "stock-f43d4.firebasestorage.app",
+  messagingSenderId: "417599448643",
+  appId: "1:417599448643:web:6374a5c6545a4459d456f6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 👉 hacer global
+window.db = db;
+window.collection = collection;
+window.addDoc = addDoc;
+window.getDocs = getDocs;
+</script>
+
 </head>
 
 <body>
@@ -19,15 +43,15 @@
         <h6>CATÁLOGOS</h6>
 
         <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">
-            Seguimiento
+            SEGUIMIENTO
         </a>
 
         <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">
-            Stock / Resguardo
+            STOCK / RESGUARDO
         </a>
 
         <a href="#" class="text-white d-block" onclick="cargar('cctv')">
-            Suc CCTV
+            SUCURSALES CCTV
         </a>
     </div>
 
@@ -41,11 +65,8 @@
 
 <script>
 
-let rol = "admin"; // cambiar a "jr" si quieres simular restricción
-
 function cargar(modulo){
 
-    // ✅ CARGA ARCHIVO HTML EXTERNO
     if(modulo.includes('.html')){
         $("#contenido").load(modulo);
         return;
@@ -83,21 +104,25 @@ function cargar(modulo){
             </div>
         `);
 
-        $('#formStock').submit(function(e){
+        cargarStock();
+
+        $('#formStock').submit(async function(e){
             e.preventDefault();
 
-            let fila = `
-                <tr>
-                    <td>${$('#articulo').val()}</td>
-                    <td>${$('#marca').val()}</td>
-                    <td>${$('#modelo').val()}</td>
-                    <td>${$('#costo').val()}</td>
-                    <td>${$('#estado').val()}</td>
-                </tr>
-            `;
+            let data = {
+                articulo: $('#articulo').val(),
+                marca: $('#marca').val(),
+                modelo: $('#modelo').val(),
+                costo: $('#costo').val(),
+                estado: $('#estado').val(),
+                fecha: new Date()
+            };
 
-            $('#tablaStock tbody').append(fila);
+            await addDoc(collection(db, "stock"), data);
+
+            alert("Guardado en la nube ✅");
             this.reset();
+            cargarStock();
         });
     }
 
@@ -131,22 +156,67 @@ function cargar(modulo){
             </div>
         `);
 
-        $('#formCCTV').submit(function(e){
+        cargarCCTV();
+
+        $('#formCCTV').submit(async function(e){
             e.preventDefault();
 
-            let fila = `
-                <tr>
-                    <td>${$('#negocio').val()}</td>
-                    <td>${$('#zona').val()}</td>
-                    <td>${$('#sucursal').val()}</td>
-                    <td>${$('#serie').val()}</td>
-                </tr>
-            `;
+            await addDoc(collection(db, "cctv"), {
+                negocio: $('#negocio').val(),
+                zona: $('#zona').val(),
+                sucursal: $('#sucursal').val(),
+                serie: $('#serie').val(),
+                fecha: new Date()
+            });
 
-            $('#tablaCCTV tbody').append(fila);
+            alert("Guardado en la nube ✅");
             this.reset();
+            cargarCCTV();
         });
     }
+}
+
+// =========================
+// FUNCIONES FIREBASE
+// =========================
+
+async function cargarStock(){
+    const querySnapshot = await getDocs(collection(db, "stock"));
+    let html = "";
+
+    querySnapshot.forEach((doc) => {
+        let d = doc.data();
+        html += `
+            <tr>
+                <td>${d.articulo}</td>
+                <td>${d.marca}</td>
+                <td>${d.modelo}</td>
+                <td>${d.costo}</td>
+                <td>${d.estado}</td>
+            </tr>
+        `;
+    });
+
+    $('#tablaStock tbody').html(html);
+}
+
+async function cargarCCTV(){
+    const querySnapshot = await getDocs(collection(db, "cctv"));
+    let html = "";
+
+    querySnapshot.forEach((doc) => {
+        let d = doc.data();
+        html += `
+            <tr>
+                <td>${d.negocio}</td>
+                <td>${d.zona}</td>
+                <td>${d.sucursal}</td>
+                <td>${d.serie}</td>
+            </tr>
+        `;
+    });
+
+    $('#tablaCCTV tbody').html(html);
 }
 
 </script>
