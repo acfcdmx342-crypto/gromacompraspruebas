@@ -21,7 +21,7 @@ Simulación frontend (sin backend)
     <div class="bg-dark text-white p-3" style="width:260px; min-height:100vh;">
         <h6>CATÁLOGOS</h6>
 
-        <a href="#" class="text-white d-block mb-2" onclick="cargar('seguimiento')">Seguimiento</a>
+        <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">Seguimiento</a>
         <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">Stock / Resguardo</a>
         <a href="#" class="text-white d-block" onclick="cargar('cctv')">Suc CCTV</a>
     </div>
@@ -40,14 +40,9 @@ let rol = "admin"; // cambiar a "jr" para simular restricción
 
 function cargar(modulo){
 
-    if(modulo === 'seguimiento'){
-        $('#contenido')tecnologia.html(`
-            <div class="card p-4">
-                <h4>Seguimiento</h4>
-                <p>Aquí se integra tu sistema existente.</p>
-            </div>
-        `);
-    }
+    function cargar(ruta){
+    $("#contenido").load(ruta);
+}
 
     if(modulo === 'stock'){
         $('#contenido').html(`
