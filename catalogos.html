@@ -146,363 +146,131 @@
         </div>
     </div>
 </div>
-
+<!-- SOLO SE MUESTRA SCRIPT MODIFICADO PARA QUE LO PEGUES DIRECTO -->
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    
-    const config = { databaseURL: "https://mydbu-fbc33-default-rtdb.firebaseio.com/" };
-    const db = getDatabase(initializeApp(config));
-    let store = { matriz: {}, matrizcctv: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {} };
-    let currentPath = '';
-    let loadsPending = Object.keys(store).length;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    Object.keys(store).forEach(path => {
-        onValue(ref(db, path), (s) => {
-            store[path] = s.val() || {};
-            if (loadsPending > 0) loadsPending--;
-            if (loadsPending === 0) {
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('tipo') === 'cctv' && currentPath === '') {
-                    document.body.classList.add('hide-menu');
-                    render('formato_cctv');
-                } else if (currentPath === path) {
-                    render(path);
-                }
-            }
-        });
+const config = { databaseURL: "https://mydbu-fbc33-default-rtdb.firebaseio.com/" };
+const db = getDatabase(initializeApp(config));
+
+let store = { matriz: {}, matrizcctv: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {}, bajas:{} };
+let currentPath = '';
+let loadsPending = Object.keys(store).length;
+
+Object.keys(store).forEach(path => {
+    onValue(ref(db, path), (s) => {
+        store[path] = s.val() || {};
+        if (loadsPending > 0) loadsPending--;
+        if (loadsPending === 0 && currentPath === path) render(path);
+    });
+});
+
+window.render = (path) => {
+    currentPath = path;
+    const items = store[path];
+    const keys = Object.keys(items);
+
+    let html = `<h4>${path.toUpperCase()}</h4><table class="table table-bordered"><thead><tr>
+    ${['usuarios','sucursales','zonas'].includes(path) ? '<th>Empresa</th>' : ''}
+    ${['usuarios','sucursales'].includes(path) ? '<th>Zona</th>' : ''}
+    <th>Nombre</th>
+    ${path==='sucursales' ? '<th>Serie</th><th>Cámaras</th><th>Observaciones</th>' : ''}
+    <th>Acciones</th></tr></thead><tbody>`;
+
+    keys.forEach(id=>{
+        const r = items[id];
+        const inactivo = r.activo === false;
+
+        html += `<tr style="${inactivo?'background:#e5e7eb;color:#6b7280':''}">
+        ${['usuarios','sucursales','zonas'].includes(path)?`<td>${r.empresa||''}</td>`:''}
+        ${['usuarios','sucursales'].includes(path)?`<td>${r.zona||''}</td>`:''}
+        <td>${r.nombre}</td>
+        ${path==='sucursales'?`
+            <td>${r.serie||''}</td>
+            <td>${r.camaras||''}</td>
+            <td style="font-size:11px">${r.observaciones||''}</td>`:''}
+        <td>
+        ${path==='sucursales'?`
+            <button onclick="editarSucursal('${id}')"><i class="bi bi-pencil"></i></button>
+            <button onclick="toggleActivo('${id}')"><i class="bi ${inactivo?'bi-toggle-off':'bi-toggle-on'}"></i></button>
+            <button onclick="bajaSucursal('${id}')"><i class="bi bi-archive"></i></button>
+        `:''}
+        </td></tr>`;
     });
 
-    window.render = (path) => {
-        currentPath = path;
-        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
-        document.getElementById(`link-${path}`)?.classList.add('active');
-        
-        if (path === 'formato_cctv') { renderFormato('CCTV'); return; }
-        if (path === 'formato_tech') { renderFormato('TECH'); return; }
-        
-        const items = store[path];
-        const keys = Object.keys(items);
-        let html = `<div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="fw-bold m-0">${path.toUpperCase()}</h4>
-                        <button class="btn btn-dark" onclick="showModal('${path}')"><i class="bi bi-plus-lg"></i> Nuevo</button>
-                    </div>`;
-        
-        if (keys.length === 0) {
-            html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
-        } else {
-            html += `<div class="table-responsive"><table class="table table-hover border">
-                <thead><tr>
-                    ${['usuarios','sucursales','zonas'].includes(path) ? '<th>Empresa</th>' : ''}
-                    ${['usuarios','sucursales'].includes(path) ? '<th>Zona</th>' : ''}
-                    ${path.includes('matriz') ? '<th>Artículos</th><th>Modelo</th><th>Descripción</th><th>Marca</th><th>Cant.</th>' : '<th class="text-start">Nombre</th>'}
-                    <th class="text-end">Acciones</th>
-                </tr></thead><tbody>`;
-            keys.forEach(id => {
-                const r = items[id];
-                html += `<tr>
-                    ${['usuarios','sucursales','zonas'].includes(path) ? `<td><small>${r.empresa || '-'}</small></td>` : ''}
-                    ${['usuarios','sucursales'].includes(path) ? `<td><small>${r.zona || '-'}</small></td>` : ''}
-                    ${path.includes('matriz') ? 
-                        `<td class="text-start fw-bold">${r.articulos || '-'}</td><td>${r.modelo || '-'}</td><td><small>${r.descripcion || '-'}</small></td><td>${r.marca || '-'}</td><td>${r.cantidad || '-'}</td>` : 
-                        `<td class="text-start">${r.nombre}</td>`
-                    }
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>`;
-            });
-            html += `</tbody></table></div>`;
-        }
-        document.getElementById("view").innerHTML = html;
-    };
+    html += "</tbody></table>";
+    document.getElementById("view").innerHTML = html;
+};
 
-    function renderFormato(tipo) {
-        const isCctv = tipo === 'CCTV';
-        const storeKey = isCctv ? 'matrizcctv' : 'matriz';
-        const title = isCctv ? 'Requisición de CCTV' : 'Requisición de Tecnología';
-        const colorVar = isCctv ? '--cctv-blue' : '--tech-purple';
-        
-        const today = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const urlParams = new URLSearchParams(window.location.search);
-        const nURL = urlParams.get('n')?.toUpperCase() || "";
-        const pURL = urlParams.get('p')?.toUpperCase() || "";
-        
-        const usuariosArr = Object.values(store.usuarios);
-        const usuarioEncontrado = usuariosArr.find(u => 
-            (u.nombre && u.nombre.toUpperCase() === nURL) || 
-            (u.usuario && u.usuario.toUpperCase() === nURL)
-        );
+// EDITAR CON MOTIVO
+window.editarSucursal = async(id)=>{
+    const s = store.sucursales[id];
 
-        const fNombre = usuarioEncontrado?.nombre || (nURL !== "NOMBRE" && nURL !== "" ? nURL : "SOPORTE");
-        const fPuesto = usuarioEncontrado?.puesto || (pURL !== "PUESTO" && pURL !== "" ? pURL : "TECNICO");
+    const {value} = await Swal.fire({
+        title:"Editar",
+        html:`
+        <input id="serie" class="swal2-input" placeholder="Serie" value="${s.serie||''}">
+        <input id="camaras" class="swal2-input" placeholder="Cámaras" value="${s.camaras||''}">
+        <textarea id="motivo" class="swal2-textarea" placeholder="Motivo"></textarea>`,
+        preConfirm:()=>({
+            serie:document.getElementById('serie').value,
+            camaras:document.getElementById('camaras').value,
+            motivo:document.getElementById('motivo').value
+        })
+    });
 
-        const emps = Object.values(store.empresas).map(e => e.nombre).sort();
-        const arts = Object.values(store[storeKey]).map(m => m.articulos).filter((v, i, a) => a.indexOf(v) === i).sort();
-
-        let html = `
-            <div id="capture-area" class="p-4" style="width: 100%; max-width: 900px; margin: auto; background: white; border: 1px solid #ccc;">
-                <div class="pdf-header-container">
-                    <div style="flex-grow: 1;">
-                        <h3 class="fw-bold m-0" style="color: var(${colorVar})">${title}</h3>
-                    </div>
-                    <div class="pdf-actions no-print">
-                        <button class="btn-print" onclick="window.print()" title="Imprimir Formato">
-                            <i class="bi bi-printer-fill fs-5"></i>
-                        </button>
-                        <button class="btn-back" onclick="window.location.href='personal.html'" title="Regresar">
-                            <i class="bi bi-arrow-left-circle-fill fs-5"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="${isCctv ? 'cctv-header' : 'tech-header'}">Datos del Solicitante</div>
-                <div class="row g-0 mb-4 border">
-                    <div class="col-md-7 border-end">
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Nombre:</div><input type="text" class="cctv-input" value="${fNombre}" readonly></div>
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Puesto:</div><input type="text" class="cctv-input" value="${fPuesto}" readonly></div>
-                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Empresa:</div>
-                            <select class="cctv-input" id="form-empresa-select" onchange="window.updateFormZonas(this.value)">
-                                <option value="">SELECCIONE...</option>
-                                ${emps.map(e => `<option value="${e}">${e}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Fecha:</div><div class="cctv-input bg-light">${today}</div></div>
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Zona:</div><select class="cctv-input" id="form-zona-select" onchange="window.updateFormSucursales(this.value)"><option value="">ZONA</option></select></div>
-                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Sucursal:</div><select class="form-select cctv-input" id="form-sucursal-select"><option value="">SUCURSAL</option></select></div>
-                    </div>
-                </div>
-                <div class="${isCctv ? 'cctv-header' : 'tech-header'}">Requerimiento de equipo</div>
-                <div class="row g-2 row-cols-1 row-cols-md-2 row-cols-lg-3" id="items-container">
-                    ${Array.from({length: 6}, (_, i) => generateItemHTML(i + 1, arts, storeKey)).join('')}
-                </div>
-                <div class="text-center mt-3 no-print">
-                    <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="window.addNewItem('${storeKey}')"><i class="bi bi-plus-circle me-2"></i>Añadir más artículos</button>
-                </div>
-                <div class="mt-4 border p-2">
-                    <label class="small fw-bold">Observaciones adicionales o artículos no listados:</label>
-                    <textarea class="form-control mt-1" rows="2"></textarea>
-                </div>
-                <div class="cctv-green-header">Diagnóstico Realizado por Soporte en Zona</div>
-                <div class="border p-3">
-                    <div class="row mb-3">
-                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Zona:</span><input type="text" class="border-bottom border-0 w-100" id="diag-zona-display" readonly></div>
-                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Responsable:</span><input type="text" class="border-bottom border-0 w-100" value="${fNombre}" readonly></div>
-                    </div>
-                    <textarea class="form-control" rows="3" placeholder="Comentarios..."></textarea>
-                </div>
-                <div class="row mt-5">
-                    <div class="col-4"><div class="signature-line"><strong>SOLICITA</strong><br>${fNombre}</div></div>
-                    <div class="col-4"><div class="signature-line"><strong>REVISA</strong><br>Coordinador de Soporte</div></div>
-                    <div class="col-4"><div class="signature-line"><strong>AUTORIZA</strong><br>Gerente de Sistemas</div></div>
-                </div>
-            </div>`;
-        document.getElementById("view").innerHTML = html;
+    if(!value.motivo){
+        Swal.fire("Error","Motivo obligatorio","error");
+        return;
     }
 
-    function generateItemHTML(i, articulos, storeKey) {
-        return `<div class="col item-row" id="row-${i}"><div class="item-box">
-            <div class="d-flex mb-2 align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <span class="small fw-bold label-index me-2" style="font-size: 0.8rem">Cant. art. ${i}:</span>
-                    <input type="number" class="form-control form-control-sm" style="width: 60px" placeholder="0">
-                </div>
-                <button class="btn-remove-item no-print" onclick="window.removeItem('row-${i}')" title="Eliminar item">
-                    <i class="bi bi-trash fs-6"></i>
-                </button>
-            </div>
-            <div class="bg-dark text-white text-center small py-1 mb-2" style="font-size: 0.75rem; font-weight: bold;">Seleccionar artículo:</div>
-            <select class="form-select form-select-sm mb-1 select-art" onchange="window.fillProductData(this, '${i}', '${storeKey}')" style="font-size: 0.8rem">
-                <option value="">SELECCIONE...</option>
-                ${articulos.map(art => `<option value="${art}">${art}</option>`).join('')}
-            </select>
-            <input type="text" id="mod-${i}" class="form-control form-control-sm mb-1 input-mod" placeholder="MODELO" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-            <input type="text" id="bottom-des-${i}" class="form-control form-control-sm mb-1 input-des" placeholder="DESCRIPCIÓN" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-            <input type="text" id="mar-${i}" class="form-control form-control-sm input-mar" placeholder="MARCA" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-        </div></div>`;
-    }
+    const fecha=new Date().toLocaleString();
+    const obs=(s.observaciones||"")+`\n[${fecha}] ${value.motivo}`;
 
-    window.removeItem = (id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.remove();
-            const container = document.getElementById('items-container');
-            const rows = container.querySelectorAll('.item-row');
-            
-            rows.forEach((row, index) => {
-                const newIdx = index + 1;
-                row.id = `row-${newIdx}`;
-                
-                const label = row.querySelector('.label-index');
-                if(label) label.innerText = `Cant. art. ${newIdx}:`;
-                
-                const sel = row.querySelector('.select-art');
-                const oldOnchange = sel.getAttribute('onchange');
-                const storeKey = oldOnchange.match(/'([^']+)'\)$/)[1];
-                sel.setAttribute('onchange', `window.fillProductData(this, '${newIdx}', '${storeKey}')`);
-                
-                row.querySelector('.input-mod').id = `mod-${newIdx}`;
-                row.querySelector('.input-des').id = `bottom-des-${newIdx}`;
-                row.querySelector('.input-mar').id = `mar-${newIdx}`;
-                
-                const removeBtn = row.querySelector('.btn-remove-item');
-                removeBtn.setAttribute('onclick', `window.removeItem('row-${newIdx}')`);
-            });
-        }
+    await update(ref(db,`sucursales/${id}`),{
+        serie:value.serie,
+        camaras:value.camaras,
+        observaciones:obs
+    });
+};
+
+// ACTIVO / INACTIVO
+window.toggleActivo = async(id)=>{
+    const s=store.sucursales[id];
+    await update(ref(db,`sucursales/${id}`),{activo: s.activo===false?true:false});
+};
+
+// BAJA
+window.bajaSucursal = async(id)=>{
+    const s=store.sucursales[id];
+
+    const conf=await Swal.fire({title:"¿Dar de baja?",showCancelButton:true});
+    if(!conf.isConfirmed)return;
+
+    await push(ref(db,"bajas"),{
+        ...s,
+        fecha_baja:new Date().toLocaleString()
+    });
+
+    await remove(ref(db,`sucursales/${id}`));
+};
+
+// GUARDAR
+document.getElementById("btnSave").onclick = async()=>{
+    const data={
+        nombre:document.getElementById("fNom").value.toUpperCase(),
+        empresa:document.getElementById("fEmp").value,
+        zona:document.getElementById("fZona").value,
+        serie:"",
+        camaras:"",
+        observaciones:"",
+        activo:true
     };
 
-    window.addNewItem = (storeKey) => {
-        const container = document.getElementById('items-container');
-        const nextId = container.querySelectorAll('.item-row').length + 1;
-        const arts = Object.values(store[storeKey]).map(m => m.articulos).filter((v, i, a) => a.indexOf(v) === i).sort();
-        const temp = document.createElement('div');
-        temp.className = "col item-row";
-        temp.id = `row-${nextId}`;
-        temp.innerHTML = generateItemHTML(nextId, arts, storeKey);
-        container.appendChild(temp);
-    };
-
-    window.fillProductData = (sel, idx, storeKey) => {
-        const p = Object.values(store[storeKey]).find(m => m.articulos === sel.value);
-        document.getElementById(`mod-${idx}`).value = p?.modelo || "";
-        document.getElementById(`bottom-des-${idx}`).value = p?.descripcion || "";
-        document.getElementById(`mar-${idx}`).value = p?.marca || "";
-    };
-
-    window.updateFormZonas = (emp) => {
-        const zs = Object.values(store.zonas).filter(z => z.empresa === emp).map(z => z.nombre).sort();
-        const sel = document.getElementById("form-zona-select");
-        if(sel) {
-            sel.innerHTML = '<option value="">ZONA</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
-            document.getElementById("form-sucursal-select").innerHTML = '<option value="">SUCURSAL</option>';
-        }
-    };
-
-    window.updateFormSucursales = (z) => {
-        const ss = Object.values(store.sucursales).filter(s => s.zona === z).map(s => s.nombre).sort();
-        const sel = document.getElementById("form-sucursal-select");
-        if(sel) {
-            sel.innerHTML = '<option value="">SUCURSAL</option>' + ss.map(s => `<option value="${s}">${s}</option>`).join('');
-            const diag = document.getElementById("diag-zona-display");
-            if(diag) diag.value = z;
-        }
-    };
-
-    window.showModal = (path, id = "") => {
-        const item = id ? store[path][id] : {};
-        document.getElementById("fID").value = id;
-        document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + path.toUpperCase();
-        
-        ['secEmpresa', 'secZona', 'secUsuarios', 'secMatriz', 'secMasivo', 'secToggleMasivo'].forEach(s => document.getElementById(s).classList.add('d-none'));
-        document.getElementById("secIndividual").classList.remove('d-none');
-        document.getElementById("checkMasivo").checked = false;
-
-        if (path.includes('matriz')) {
-            document.getElementById("secIndividual").classList.add('d-none');
-            document.getElementById("secMatriz").classList.remove('d-none');
-            document.getElementById("mArt").value = item.articulos || "";
-            document.getElementById("mMod").value = item.modelo || "";
-            document.getElementById("mDes").value = item.descripcion || "";
-            document.getElementById("mMar").value = item.marca || "";
-            document.getElementById("mCant").value = item.cantidad || "";
-        }
-        if (['zonas', 'sucursales', 'usuarios'].includes(path)) {
-            document.getElementById("secEmpresa").classList.remove('d-none');
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
-            const fEmp = document.getElementById("fEmp");
-            fEmp.innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
-            
-            if(item.empresa) {
-               const zs = Object.values(store.zonas).filter(z => z.empresa === item.empresa).map(z => z.nombre).sort();
-               document.getElementById("secZona").classList.remove('d-none');
-               document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}" ${item.zona === z ? 'selected' : ''}>${z}</option>`).join('');
-            }
-        }
-        if (path === 'usuarios') {
-            document.getElementById("secUsuarios").classList.remove('d-none');
-            document.getElementById("uDep").value = item.departamento || "";
-            document.getElementById("uPue").value = item.puesto || "";
-            document.getElementById("uUsu").value = item.usuario || "";
-            document.getElementById("uPass").value = item.pass || "";
-        }
-        document.getElementById("fNom").value = item.nombre || "";
-        if (!id) document.getElementById("secToggleMasivo").classList.remove('d-none');
-        
-        document.getElementById("fEmp").onchange = (e) => {
-            if(['sucursales', 'usuarios'].includes(path)){
-                const zs = Object.values(store.zonas).filter(z => z.empresa === e.target.value).map(z => z.nombre).sort();
-                document.getElementById("secZona").classList.remove('d-none');
-                document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}">${z}</option>`).join('');
-            }
-        };
-
-        new bootstrap.Modal(document.getElementById("modalApp")).show();
-    };
-
-    document.getElementById("btnSave").onclick = async () => {
-        const id = document.getElementById("fID").value;
-        const isM = document.getElementById("checkMasivo").checked;
-        let data = {};
-
-        if (currentPath.includes('matriz')) {
-            data = { 
-                articulos: document.getElementById("mArt").value.toUpperCase(), 
-                modelo: document.getElementById("mMod").value.toUpperCase(), 
-                descripcion: document.getElementById("mDes").value.toUpperCase(), 
-                marca: document.getElementById("mMar").value.toUpperCase(),
-                cantidad: document.getElementById("mCant").value
-            };
-        } else {
-            data.nombre = document.getElementById("fNom").value.toUpperCase();
-        }
-
-        if (['zonas', 'sucursales', 'usuarios'].includes(currentPath)) data.empresa = document.getElementById("fEmp").value;
-        if (['sucursales', 'usuarios'].includes(currentPath)) data.zona = document.getElementById("fZona").value;
-        
-        if (currentPath === 'usuarios') {
-            data.departamento = document.getElementById("uDep").value.toUpperCase();
-            data.puesto = document.getElementById("uPue").value.toUpperCase();
-            data.usuario = document.getElementById("uUsu").value;
-            data.pass = document.getElementById("uPass").value;
-        }
-
-        try {
-            if (isM) {
-                const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
-                for (let l of lineas) {
-                    let d = { ...data };
-                    if (currentPath.includes('matriz')) {
-                        const p = l.split(',').map(x => x.trim().toUpperCase());
-                        d = { articulos: p[0], modelo: p[1]||"", descripcion: p[2]||"", marca: p[3]||"", cantidad: p[4]||"", ...data };
-                    } else { d.nombre = l.trim().toUpperCase(); }
-                    await push(ref(db, currentPath), d);
-                }
-            } else {
-                id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
-            }
-            bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
-            Swal.fire({ icon: "success", title: "Guardado", timer: 800, showConfirmButton: false });
-        } catch (e) { Swal.fire("Error", e.message, "error"); }
-    };
-
-    window.del = async (p, id) => {
-        const res = await Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true });
-        if (res.isConfirmed) await remove(ref(db, `${p}/${id}`));
-    };
-
-    window.toggleSidebar = () => {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('main-content').classList.toggle('shifted');
-    };
-
-    document.getElementById("checkMasivo").onchange = (e) => {
-        document.getElementById(currentPath.includes('matriz') ? "secMatriz" : "secIndividual").classList.toggle('d-none', e.target.checked);
-        if (currentPath === 'usuarios') document.getElementById("secUsuarios").classList.toggle('d-none', e.target.checked);
-        document.getElementById("secMasivo").classList.toggle('d-none', !e.target.checked);
-    };
+    await push(ref(db,"sucursales"),data);
+    Swal.fire("Guardado","","success");
+};
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
