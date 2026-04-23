@@ -535,35 +535,38 @@
         document.getElementById("secMasivo").classList.toggle('d-none', !e.target.checked);
     };
   let currentUserId = null;
-
 window.openEmpresaModal = (userId) => {
     currentUserId = userId;
-const usuario = store.usuarios[userId];
-const asignadas = usuario?.empresasAsignadas || [];
 
-empresas.forEach(emp => {
-    const checked = asignadas.includes(emp.nombre) ? 'checked' : '';
+    const usuario = store.usuarios[userId];
+    const asignadas = usuario?.empresasAsignadas || [];
 
-    html += `
-    <div class="form-check mb-2">
-        <input 
-            class="form-check-input emp-check" 
-            type="checkbox" 
-            value="${emp.nombre}" 
-            id="emp-${emp.nombre}"
-            ${checked}>
-        
-        <label class="form-check-label fw-semibold" for="emp-${emp.nombre}">
-            ${emp.nombre}
-        </label>
-    </div>
-    `;
-});
-    
+    const empresas = Object.values(store.empresas); // ✅ obtener empresas correctamente
+    let html = ""; // ✅ inicializar html
+
+    empresas.forEach(emp => {
+        const checked = asignadas.includes(emp.nombre) ? 'checked' : '';
+
+        html += `
+        <div class="form-check mb-2">
+            <input 
+                class="form-check-input emp-check" 
+                type="checkbox" 
+                value="${emp.nombre}" 
+                id="emp-${emp.nombre}"
+                ${checked}>
+            
+            <label class="form-check-label fw-semibold" for="emp-${emp.nombre}">
+                ${emp.nombre}
+            </label>
+        </div>
+        `;
+    });
+
     document.getElementById("empresa-tree").innerHTML = html;
 
     new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
-};  
+};    
     window.guardarAsignacion = async () => {
     const seleccionadas = [];
 
