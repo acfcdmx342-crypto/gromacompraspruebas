@@ -74,24 +74,6 @@
     <div style="animation: pulse 1.5s infinite;"><img src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" style="width: 250px;"></div>
     <div class="mt-3"><div class="spinner-border text-primary"></div><span class="ms-2 fw-bold">Procesando...</span></div>
 </div>
-<script>
-    const btnMode = document.getElementById('btnDarkMode');
-    const aplicarTema = (tema) => {
-        if (tema === 'dark') {
-            document.body.classList.add('dark-mode');
-            btnMode.querySelector('i').classList.replace('fa-moon', 'fa-sun');
-        } else {
-            document.body.classList.remove('dark-mode');
-            btnMode.querySelector('i').classList.replace('fa-sun', 'fa-moon');
-        }
-    };
-    aplicarTema(localStorage.getItem('themeTec'));
-    btnMode.onclick = () => {
-        const nt = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-        localStorage.setItem('themeTec', nt);
-        aplicarTema(nt);
-    };
-</script>
 <script type="module">
     import { database, ref, push, set, get, onValue, update, remove } from "./firebase.js";
     const sesion = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
