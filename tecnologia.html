@@ -84,27 +84,11 @@
     const adminPuestos = ["GERENTE DE SISTEMAS", "JEFE DE INFRAESTRUCTURA Y SOPORTE TECNICO", "COORDINADOR DE SOPORTE TECNICO", "SOPORTE TECNICO SR", "SOPORTE TECNICO"];
     window.esAdmin = adminPuestos.includes(window.puestoSesion);
     window.esSoporteJR = window.puestoSesion === "SOPORTE TECNICO JR";
-    window.esCoordinador = window.puestoSesion === "COORDINADOR DE SOPORTE TECNICO";  // 👉 valida permiso boton
-    document.getElementById("usuarioActivo").textContent = window.nombreSesion;
-    document.getElementById("puestoActivo").textContent = window.puestoSesion;
-    document.getElementById("soporte").value = window.nombreSesion;
-    const linkCCTV = document.getElementById("linkCCTV");
-    const nombreLimpio = encodeURIComponent(window.nombreSesion);
-    const puestoLimpio = encodeURIComponent(window.puestoSesion);
+    
+   const linkCCTV = document.getElementById("linkCCTV");
+if(linkCCTV){
     linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
-   if (window.esAdmin) {
-        document.getElementById("liBase").innerHTML = '<a class="dropdown-item" href="base.html">🏠 Página Base</a>';
-        document.getElementById("contenedorExportar").innerHTML = `<button class="btn btn-outline-success btn-sm fw-bold px-3" onclick="exportarExcel()">📊 Reporte</button>`;
-    }
-    const solicitudesRef = ref(database, "tecnologia");
-    const seguimientoRef = ref(database, "seguimiento");
-    const historialPermanenteRef = ref(database, "historial_permanente");
-    let globalSeguimientos = [];
-    let globalSolicitudes = [];
-   onValue(seguimientoRef, snap => {
-    globalSeguimientos = [];
-    snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key }); });
-
+}
 onValue(solicitudesRef, sSnap => {
     globalSolicitudes = [];
     sSnap.forEach(doc => { 
