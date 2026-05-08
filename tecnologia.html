@@ -679,6 +679,16 @@ else if (local) tipo = "LOCAL";
         if (snap.exists()) {
              contador = Object.keys(snap.val()).length + 1;
         }
+    // 🚫 Bloquear zonas genéricas
+const zonasBloqueadas = ["CENTRO", "SUR", "NORTE"];
+
+if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
+    return Swal.fire(
+        "Zona inválida",
+        "Ingresa tu zona correctamente",
+        "warning"
+    );
+}
         const reader = new FileReader();
         reader.onload = async () => {
             const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
