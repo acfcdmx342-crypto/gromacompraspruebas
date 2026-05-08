@@ -50,27 +50,98 @@ window.updateDoc = updateDoc;
 <!-- CONTENIDO -->
 <div class="flex-grow-1">
 
-    <!-- 🔥 HEADER GLOBAL -->
-    <div id="headerGlobal" class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
+    <!-- 🔥 CABECERA -->
+    <div id="headerGlobal" class="container-fluid py-3 border-bottom bg-light">
 
-        <!-- 👤 USUARIO -->
-        <div>
-            <div class="fw-bold" id="usuarioNombre">USUARIO DE PRUEBAS</div>
-            <small id="usuarioPuesto">SOPORTE TECNICO JR</small>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+        <!-- 👤 USUARIO + AVISO -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+            <div class="user-info-box border-start border-primary border-4">
+                <div class="fw-bold text-primary">
+                    👤 <span id="usuarioActivo">USUARIO DE PRUEBAS</span>
+                </div>
+
+                <div class="text-muted small">
+                    Puesto:
+                    <span id="puestoActivo">SOPORTE TECNICO JR</span>
+                </div>
+            </div>
+
+            <div class="aviso-devolucion d-none d-md-block">
+                <strong>⚠️ Aviso:</strong>
+                Se les recuerda que para hacer una devolución de mercancía
+                los empaques deben de estar lo más intactos posibles,
+                sin Rayaduras o Enmendaduras.
+            </div>
+
         </div>
 
-        <!-- 🌙 + CERRAR -->
-        <div class="d-flex align-items-center gap-3">
+        <!-- 🌙 + MENÚ -->
+        <div class="d-flex align-items-center gap-2">
 
-            <i class="bi bi-sun-fill" style="cursor:pointer" onclick="toggleModo()"></i>
+            <button id="btnDarkMode"
+                    class="mode-toggle-btn shadow-sm btn btn-light"
+                    onclick="toggleModo()">
 
-            <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesion()">
-                <i class="bi bi-box-arrow-right"></i>
+                <i class="bi bi-moon-fill"></i>
+
             </button>
 
-        </div>
-    </div>
+            <div class="dropdown">
 
+                <button class="btn btn-primary rounded-pill dropdown-toggle fw-bold px-4 shadow-sm"
+                        data-bs-toggle="dropdown">
+
+                    ☰ Menú
+
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+
+                    <li>
+                        <a class="dropdown-item"
+                           href="#"
+                           onclick="cargar('tecnologia.html')">
+
+                            📜 Seguimiento
+
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item"
+                           href="#"
+                           onclick="cargar('stock')">
+
+                            📦 Stock
+
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item"
+                           href="#"
+                           onclick="cargar('cctv')">
+
+                            🎥 CCTV
+
+  </a>
+ </li>
+<li><hr class="dropdown-divider"></li>
+<li>
+<a class="dropdown-item text-danger"
+href="#"
+onclick="cerrarSesion()">
+🚪 Cerrar Sesión
+</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
     <!-- CONTENIDO DINÁMICO -->
     <div class="p-4">
         <div id="contenido"></div>
