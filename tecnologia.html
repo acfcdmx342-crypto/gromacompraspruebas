@@ -240,7 +240,7 @@ onValue(solicitudesRef, sSnap => {
     <div class="d-flex justify-content-center gap-2">
         <span class="action-btn" onclick="verHistorial('${s.folio}')" title="Historial">📜</span>
         <span class="action-btn text-primary" onclick="editarRegistro('${doc.key}')" title="Editar">✏️</span>
-// 👉 boton de editar folio
+
         ${window.esCoordinador ? `
 <span class="action-btn text-danger" onclick="actualizarFolio('${doc.key}')" title="Actualizar Folio"><i class="fa-solid fa-hashtag"></i>
 </span>
