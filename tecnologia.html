@@ -356,6 +356,8 @@ window.exportarExcel = async () => {
                     <div class="text-start">
                         <label class="fw-bold small mb-1">Empresa</label>
                         <input id="edit-empresa" class="form-control text-uppercase mb-3" value="${data.empresa}">
+                        <label class="fw-bold small mb-1">Zona</label>
+                        <input id="edit-zona" class="form-control text-uppercase mb-3" value="${data.zona}">
                         <label class="fw-bold small mb-1">Sucursal</label>
                         <input id="edit-sucursal" class="form-control text-uppercase" value="${data.sucursal}">
                     </div>
@@ -365,12 +367,13 @@ window.exportarExcel = async () => {
                 cancelButtonText: 'Cancelar',
                 preConfirm: () => {
                     const empresa = document.getElementById('edit-empresa').value.trim();
+                    const zona = document.getElementById('edit-zona').value.trim();
                     const sucursal = document.getElementById('edit-sucursal').value.trim();
-                    if (!empresa || !sucursal) {
-                        Swal.showValidationMessage('Ambos campos son obligatorios');
+                    if (!empresa || !zona || !sucursal) {
+                        Swal.showValidationMessage('todos los campos son obligatorios');
                         return false;
                     }
-                    return { empresa: empresa.toUpperCase(), sucursal: sucursal.toUpperCase() };
+                    return { empresa: empresa.toUpperCase(),zona: zona.toUpperCase(),sucursal: sucursal.toUpperCase() };
                 }
             });
             if (formValues) {
@@ -572,7 +575,7 @@ seguimientos: todosSeguimientos
         const esPrimerSeguimiento = historialPrevio.length === 0;
 
         const { value: formValues } = await Swal.fire({
-            title: `Seguimiento ${esColorCenter ? 'Color Center' : 'Local'}<br><small class="text-muted">Folio: ${folio}</small>`,
+            title: `Seguimiento ${esColorCenter ? 'a Solicitud' : 'Local'}<br><small class="text-muted">Folio: ${folio}</small>`,
             html: `
                 <div class="text-start" style="font-size: 14px;">
                     <label class="fw-bold mb-1">Estado</label>
@@ -656,7 +659,7 @@ seguimientos: todosSeguimientos
             Swal.fire("Éxito", "Actualizado", "success");
         }
     };
-window.guardarSolicitud = async () => {
+   window.guardarSolicitud = async () => {
         const emp = document.getElementById("empresa").value;
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
@@ -687,8 +690,6 @@ if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
         if (snap.exists()) {
              contador = Object.keys(snap.val()).length + 1;
         }
-  
-
         const reader = new FileReader();
         reader.onload = async () => {
             const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
@@ -834,6 +835,21 @@ const todosSeguimientos = globalSeguimientos
     window.cerrarSesion = () => { localStorage.clear(); location.href = "index.html"; };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+<script>
+  // Seguridad
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+  document.onkeydown = function(e) {
+    if(e.keyCode == 123) return false;
+    if(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) return false;
+    if(e.ctrlKey && e.keyCode == 85) return false;
+  };
 
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.onkeydown = e => {
+    if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+};
+</script>
+    
 </body>
 </html>
