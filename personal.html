@@ -4,26 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema Soporte</title>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyCVPisdfwemquRfbszsIZRkHz72bCeUCNE",
   authDomain: "stock-f43d4.firebaseapp.com",
   projectId: "stock-f43d4"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 window.db = db;
 window.collection = collection;
 window.addDoc = addDoc;
@@ -37,14 +31,12 @@ body{
     background:#f2f4f7;
     transition:0.3s;
 }
-
 .user-info-box{
     background:white;
     padding:10px 20px;
     border-radius:15px;
     box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
-
 .aviso-devolucion{
     background:#fff3cd;
     border-left:5px solid #ffc107;
@@ -54,141 +46,82 @@ body{
     color:#856404;
     max-width:600px;
 }
-
 .mode-toggle-btn{
     width:42px;
     height:42px;
     border-radius:50%;
 }
-
 .dark-mode{
     background:#121416 !important;
     color:white !important;
 }
-
 .dark-mode .card{
     background:#1d1f21 !important;
     color:white !important;
 }
-
 .dark-mode .table{
     color:white !important;
 }
-
 .dark-mode .user-info-box{
     background:#1d1f21 !important;
     color:white !important;
 }
-
 .dark-mode #headerGlobal{
     background:#1d1f21 !important;
 }
 </style>  
 </head>
-
 <body>
-
 <div class="d-flex">
-
 <!-- MENÚ -->
 <div class="bg-dark text-white p-3" style="width:260px; min-height:100vh;">
     <h6>CATÁLOGOS</h6>
-
     <a href="#" onclick="cargar('tecnologia.html')" class="text-white d-block mb-2">SEGUIMIENTO</a>
     <a href="#" class="text-white d-block mb-2" onclick="cargar('stock')">STOCK / RESGUARDO</a>
     <a href="#" class="text-white d-block" onclick="cargar('cctv')">SUCURSALES CCTV</a>
 </div>
-
 <!-- CONTENIDO -->
 <div class="flex-grow-1">
-
-    <!-- 🔥 CABECERA -->
-    <div id="headerGlobal" class="container-fluid py-3 border-bottom bg-light">
-
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-
-        <!-- 👤 USUARIO + AVISO -->
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-
-            <div class="user-info-box border-start border-primary border-4">
-                <div class="fw-bold text-primary">
-                    👤 <span id="usuarioActivo">USUARIO DE PRUEBAS</span>
-                </div>
-
-                <div class="text-muted small">
-                    Puesto:
-                    <span id="puestoActivo">SOPORTE TECNICO JR</span>
-                </div>
-            </div>
-
-            <div class="aviso-devolucion d-none d-md-block">
-                <strong>⚠️ Aviso:</strong>
-                Se les recuerda que para hacer una devolución de mercancía
-                los empaques deben de estar lo más intactos posibles,
-                sin Rayaduras o Enmendaduras.
-            </div>
-
-        </div>
-
-        <!-- 🌙 + MENÚ -->
-        <div class="d-flex align-items-center gap-2">
-
-            <button id="btnDarkMode"
-                    class="mode-toggle-btn shadow-sm btn btn-light"
-                    onclick="toggleModo()">
-
-                <i class="bi bi-moon-fill"></i>
-
-            </button>
-
-            <div class="dropdown">
-
-                <button class="btn btn-primary rounded-pill dropdown-toggle fw-bold px-4 shadow-sm"
-                        data-bs-toggle="dropdown">
-
-                    ☰ Menú
-
-                </button>
-
-                <ul class="dropdown-menu dropdown-menu-end shadow">
-
-                    <li>
-                        <a class="dropdown-item"
-                           href="#"
-                           onclick="cargar('tecnologia.html')">
-
-                            📜 Seguimiento
-
-                        </a>
-                    </li>
-
-                    <li>
-                        <a class="dropdown-item"
-                           href="#"
-                           onclick="cargar('stock')">
-
-                            📦 Stock
-
-                        </a>
-                    </li>
-
-                    <li>
-                        <a class="dropdown-item"
-                           href="#"
-                           onclick="cargar('cctv')">
-
-                            🎥 CCTV
-
-  </a>
- </li>
+<!-- 🔥 CABECERA -->
+<div id="headerGlobal" class="container-fluid py-3 border-bottom bg-light">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+<!-- 👤 USUARIO + AVISO -->
+<div class="d-flex align-items-center gap-3 flex-wrap">
+<div class="user-info-box border-start border-primary border-4">
+<div class="fw-bold text-primary">
+👤 <span id="usuarioActivo">USUARIO DE PRUEBAS</span>
+</div>
+<div class="text-muted small">
+Puesto:
+<span id="puestoActivo">SOPORTE TECNICO JR</span>
+</div>
+</div>
+<div class="aviso-devolucion d-none d-md-block">
+<strong>⚠️ Aviso:</strong>
+SE LES RECUERDA QUE PARA HACER UNA DEVOLUCIÓN DE REQUICISION LOS EMPAQUES DEBEN DE ESTAR LO MAS INSTACTOS POSIBLES, SIN RAYADURAS O ENMENDADURAS.
+</div>
+</div>
+<!-- 🌙 + MENÚ -->
+<div class="d-flex align-items-center gap-2">
+<button id="btnDarkMode"
+class="mode-toggle-btn shadow-sm btn btn-light"
+onclick="toggleModo()">
+<i class="bi bi-moon-fill"></i>
+</button>
+<div class="dropdown">
+<button class="btn btn-primary rounded-pill dropdown-toggle fw-bold px-4 shadow-sm" data-bs-toggle="dropdown">
+☰ Menú
+</button>
+<ul class="dropdown-menu dropdown-menu-end shadow">
+<li>
+<a class="dropdown-item" href="#" onclick="cargar('tecnologia.html')">📜 Seguimiento</a></li>
+<li>
+<a class="dropdown-item" href="#" onclick="cargar('stock')">📦 Stock</a></li>
+<li>
+<a class="dropdown-item" href="#" onclick="cargar('cctv')">🎥 CCTV</a></li>
 <li><hr class="dropdown-divider"></li>
 <li>
-<a class="dropdown-item text-danger"
-href="#"
-onclick="cerrarSesion()">
-🚪 Cerrar Sesión
-</a>
-</li>
+<a class="dropdown-item text-danger" href="#" onclick="cerrarSesion()">🚪 Cerrar Sesión</a></li>
 </ul>
 </div>
 </div>
