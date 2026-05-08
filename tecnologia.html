@@ -673,15 +673,9 @@ if (colorCenter) tipo = "COLOR CENTER";
 else if (local) tipo = "LOCAL";
  
         if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
-        document.getElementById("loader").style.display = "flex";
-        const snap = await get(solicitudesRef);
-        let contador = 1;
-        if (snap.exists()) {
-             contador = Object.keys(snap.val()).length + 1;
-        }
-    // 🚫 Bloquear zonas genéricas
+}
+   // 🚫 Bloquear zonas genéricas
 const zonasBloqueadas = ["CENTRO", "SUR", "NORTE"];
-
 if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
     return Swal.fire(
         "Zona inválida",
@@ -689,6 +683,14 @@ if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
         "warning"
     );
 }
+    document.getElementById("loader").style.display = "flex";
+        const snap = await get(solicitudesRef);
+        let contador = 1;
+        if (snap.exists()) {
+             contador = Object.keys(snap.val()).length + 1;
+        }
+  
+
         const reader = new FileReader();
         reader.onload = async () => {
             const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
