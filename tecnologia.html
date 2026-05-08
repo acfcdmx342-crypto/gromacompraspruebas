@@ -671,16 +671,14 @@ const colorCenter = centerCheck;
 let tipo = "COMPRAS";
 if (colorCenter) tipo = "COLOR CENTER";
 else if (local) tipo = "LOCAL";
- 
-        if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
-}
-   // 🚫 Bloquear zonas genéricas
+  if(!emp || !zon || !suc || !arc) return Swal.fire("Error", "Faltan campos por completar", "error");
+// 🚫 Bloquear zonas genéricas
 const zonasBloqueadas = ["CENTRO", "SUR", "NORTE"];
 if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
     return Swal.fire(
         "Zona inválida",
         "Ingresa tu zona correctamente",
-        "warning"
+        "ERROR DE CAPTURA"
     );
 }
     document.getElementById("loader").style.display = "flex";
