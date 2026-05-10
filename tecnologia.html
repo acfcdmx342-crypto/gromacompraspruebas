@@ -193,28 +193,20 @@
     const solicitudesRef = ref(database, "tecnologia");
     const seguimientoRef = ref(database, "seguimiento");
     const historialPermanenteRef = ref(database, "historial_permanente");
-    const historialFoliosRef = ref(database, "historial_cambios_folios");
     let globalSeguimientos = [];
     let globalSolicitudes = [];
-  onValue(seguimientoRef, snap => {
+   onValue(seguimientoRef, snap => {
     globalSeguimientos = [];
-    snap.forEach(c => {
-        globalSeguimientos.push({ ...c.val(), id: c.key });
-    });
-    renderTable();
-});
-onValue(solicitudesRef, snap => {
+    snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key }); });
+
+onValue(solicitudesRef, sSnap => {
     globalSolicitudes = [];
-    snap.forEach(doc => {
+    sSnap.forEach(doc => { 
         const data = doc.val();
-        if (!data.eliminado) {
-            globalSolicitudes.push({
-                ...data,
-                id: doc.key
-            });
-        }
+        if(!data.eliminado) globalSolicitudes.push({ ...data, id: doc.key }); 
     });
-    renderTable();
+    renderTable(sSnap);
+});
 });
     function renderTable(snap) {
         const tbody = document.getElementById("tablaTecBody");
@@ -363,21 +355,6 @@ window.exportarExcel = async () => {
             const snap = await get(docRef);
             if (!snap.exists()) return;
             const data = snap.val();
-            const historialFolio = globalSeguimientos
-.filter(x => x.folio === data.folio);
-
-const confirmado = historialFolio
-.some(x => x.status === "CONFIRMADO");
-
-if(confirmado){
-
-    return Swal.fire(
-        "Bloqueado",
-        "No puedes editar una solicitud confirmada",
-        "warning"
-    );
-
-}
             const { value: formValues } = await Swal.fire({
                 title: 'Editar Solicitud',
                 html: `
@@ -628,7 +605,8 @@ seguimientos: todosSeguimientos
                         <label class="fw-bold mb-1">Costo de la Refacción</label>
                         <div class="input-group mb-3">
                             <span class="input-group-text">$</span>
-                        <input id="swal-costo" type="number" step="0.01" class="form-control" value="${costoExistente}" placeholder="0.00" ${costoExistente ? 'readonly' : ''} >                        </div>
+                            <input id="swal-costo" type="number" step="0.01" class="form-control" value="${costoExistente}" placeholder="0.00">
+                        </div>
                     </div>
 
                     <label class="fw-bold mb-1">Observaciones</label>
@@ -691,19 +669,6 @@ seguimientos: todosSeguimientos
         const zon = document.getElementById("zona").value;
         const suc = document.getElementById("sucursal").value;
         const arc = document.getElementById("archivo").files[0];
-       // ======================================================
-// VALIDAR PESO MAXIMO
-// ======================================================
-
-if (arc && arc.size > 8 * 1024 * 1024) {
-
-    return Swal.fire(
-        "Archivo demasiado pesado",
-        "El archivo no debe superar 8MB",
-        "warning"
-    );
-
-}
         const localCheck = document.getElementById("checkLocal").checked;
         const centerCheck = document.getElementById("checkCenter").checked;
 // 👉 SI ES LOCAL O COLOR CENTER
@@ -726,40 +691,10 @@ if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
 }
     document.getElementById("loader").style.display = "flex";
         const snap = await get(solicitudesRef);
-       let contador = 1;
-
-if (snap.exists()) {
-
-    const folios = [];
-
-    snap.forEach(c => {
-
-        const d = c.val();
-
-        if(d.folio){
-
-            const match =
-            d.folio.match(/(\d+)$/);
-
-            if(match){
-
-                folios.push(
-                    parseInt(match[1])
-                );
-
-            }
-
+        let contador = 1;
+        if (snap.exists()) {
+             contador = Object.keys(snap.val()).length + 1;
         }
-
-    });
-
-    contador =
-    folios.length > 0
-    ? Math.max(...folios) + 1
-    : 1;
-
-}
-       
         const reader = new FileReader();
         reader.onload = async () => {
             const fol = `TEC-${emp.substring(0,3)}-${zon.substring(0,3)}-${contador.toString().padStart(4, '0')}`.toUpperCase();
@@ -902,164 +837,6 @@ const todosSeguimientos = globalSeguimientos
         }
     }
 };
-// ======================================================
-// FUNCION GLOBAL PARA ACTUALIZAR FOLIOS EN TODO EL SISTEMA
-// ======================================================
-
-async function actualizarFolioGlobal({
-    folioAnterior,
-    folioNuevo,
-    idKey,
-    usuario
-}) {
-
-    // ======================================================
-    // VALIDAR DUPLICADOS EN TECNOLOGIA
-    // ======================================================
-
-    const tecSnap = await get(solicitudesRef);
-
-    let existeDuplicado = false;
-
-    tecSnap.forEach(c => {
-        const d = c.val();
-
-        if (
-            d.folio === folioNuevo &&
-            c.key !== idKey
-        ) {
-            existeDuplicado = true;
-        }
-    });
-
-    if (existeDuplicado) {
-        throw new Error("DUPLICADO");
-    }
-
-    // ======================================================
-    // ACTUALIZAR TABLA PRINCIPAL
-    // ======================================================
-
-    const docRef = ref(database, `tecnologia/${idKey}`);
-
-    await update(docRef, {
-        folio: folioNuevo,
-        ultimaActualizacionFolio: new Date().toISOString(),
-        actualizadoPor: usuario
-    });
-
-    // ======================================================
-    // ACTUALIZAR SEGUIMIENTOS
-    // ======================================================
-
-    const segSnap = await get(seguimientoRef);
-
-    if (segSnap.exists()) {
-
-        const updatesSeg = {};
-
-        segSnap.forEach(child => {
-
-            const seg = child.val();
-
-            if (seg.folio === folioAnterior) {
-
-                updatesSeg[
-                    `${child.key}/folio`
-                ] = folioNuevo;
-
-            }
-
-        });
-
-        if (Object.keys(updatesSeg).length > 0) {
-
-            await update(
-                seguimientoRef,
-                updatesSeg
-            );
-
-        }
-
-    }
-
-    // ======================================================
-    // ACTUALIZAR HISTORIAL PERMANENTE
-    // ======================================================
-
-    const histSnap = await get(historialPermanenteRef);
-
-    if (histSnap.exists()) {
-
-        const updatesHist = {};
-
-        histSnap.forEach(child => {
-
-            const hist = child.val();
-
-            // principal
-            if (hist.folio === folioAnterior) {
-
-                updatesHist[
-                    `${child.key}/folio`
-                ] = folioNuevo;
-
-            }
-
-            // seguimientos internos
-            if (hist.seguimientos) {
-
-                Object.keys(hist.seguimientos)
-                .forEach(k => {
-
-                    const segInterno =
-                        hist.seguimientos[k];
-
-                    if (
-                        segInterno.folio ===
-                        folioAnterior
-                    ) {
-
-                        updatesHist[
-                            `${child.key}/seguimientos/${k}/folio`
-                        ] = folioNuevo;
-
-                    }
-
-                });
-
-            }
-
-        });
-
-        if (Object.keys(updatesHist).length > 0) {
-
-            await update(
-                historialPermanenteRef,
-                updatesHist
-            );
-
-        }
-
-    }
-
-    // ======================================================
-    // REGISTRAR HISTORIAL
-    // ======================================================
-
-    await push(historialFoliosRef, {
-
-        folioAnterior,
-        folioNuevo,
-
-        usuario,
-        fecha: new Date().toISOString(),
-
-        modulo: "TECNOLOGIA"
-
-    });
-
-}
 // 👉 actualizacion de folio  en todo
 window.actualizarFolio = async (idKey) => {
     try {
@@ -1069,25 +846,6 @@ window.actualizarFolio = async (idKey) => {
             return Swal.fire("Error", "No existe el registro", "error");
         }
         const data = snap.val();
-        // ======================================================
-// VALIDAR SI YA ESTA CONFIRMADO
-// ======================================================
-
-const historialFolio = globalSeguimientos
-.filter(x => x.folio === data.folio);
-
-const confirmado = historialFolio
-.some(x => x.status === "CONFIRMADO");
-
-if (confirmado) {
-
-    return Swal.fire(
-        "Bloqueado",
-        "No puedes modificar un folio confirmado",
-        "warning"
-    );
-
-}
         const folioActual = data.folio;
         const { value: nuevoFolio } = await Swal.fire({
             title: 'Actualizar Folio',
@@ -1111,19 +869,6 @@ if (confirmado) {
                     .trim()
                     .toUpperCase();
                 if (!nuevo) {
-                    
-const regex =
-/^[A-Z0-9-_]+$/;
-
-if(!regex.test(nuevo)){
-
-    Swal.showValidationMessage(
-        'Solo letras, números, guiones y guion bajo'
-    );
-
-    return false;
-
-}
                     Swal.showValidationMessage('Ingresa el nuevo folio');
                     return false;
                 }
@@ -1155,15 +900,29 @@ if(!regex.test(nuevo)){
         if (!nuevoFolio) return;
         document.getElementById("loader").style.display = "flex";
         // ===================================================
-await actualizarFolioGlobal({
-
-    folioAnterior: folioActual,
-    folioNuevo: nuevoFolio,
-    idKey,
-
-    usuario: window.nombreSesion
-
-});
+        // 1. ACTUALIZAR TECNOLOGIA
+        // ===================================================
+        await update(docRef, {
+            folio: nuevoFolio
+        });
+        // ===================================================
+        // 2. ACTUALIZAR SEGUIMIENTOS
+        // ===================================================
+       const segSnap = await get(seguimientoRef);
+        if (segSnap.exists()) {
+            const updatesSeg = {};
+            segSnap.forEach(child => {
+                const seg = child.val();
+                if (seg.folio === folioActual) {
+                    updatesSeg[
+                        `${child.key}/folio`
+                    ] = nuevoFolio;
+                }
+            });
+            if (Object.keys(updatesSeg).length > 0) {
+                await update(seguimientoRef, updatesSeg);
+            }
+        }
         // ===================================================
         // 3. ACTUALIZAR HISTORIAL PERMANENTE
         // ===================================================
@@ -1241,34 +1000,6 @@ document.onkeydown = e => {
     if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
 };
 </script>
-  <script>
-
-const checkLocal =
-document.getElementById("checkLocal");
-
-const checkCenter =
-document.getElementById("checkCenter");
-
-checkLocal.addEventListener("change", () => {
-
-    if(checkLocal.checked){
-
-        checkCenter.checked = false;
-
-    }
-
-});
-
-checkCenter.addEventListener("change", () => {
-
-    if(checkCenter.checked){
-
-        checkLocal.checked = false;
-
-    }
-
-});
-
-</script>  
+    
 </body>
 </html>
