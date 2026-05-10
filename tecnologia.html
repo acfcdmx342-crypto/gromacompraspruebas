@@ -238,17 +238,6 @@ onValue(solicitudesRef, sSnap => {
                     <td><small>${Math.floor((new Date() - new Date(s.fechaISO || s.fechaEnvio))/3600000)}h</small></td>
     <td>
     <div class="d-flex justify-content-center gap-2">
-        <span class="action-btn text-danger"
-onclick='enviarCorreo(
-"${s.folio}",
-"${s.empresa}",
-"${s.zona}",
-"${s.sucursal}",
-`${s.archivoData}`
-)'
-title="Enviar Correo">
-<i class="fa-solid fa-envelope"></i>
-</span>
         <span class="action-btn" onclick="verHistorial('${s.folio}')" title="Historial">📜</span>
         <span class="action-btn text-primary" onclick="editarRegistro('${doc.key}')" title="Editar">✏️</span>
 
@@ -988,61 +977,6 @@ window.actualizarFolio = async (idKey) => {
         Swal.fire(
             "Error",
             "No se pudo actualizar el folio",
-            "error"
-        );
-    }
-};
-// 👉 ENVIAR CORREO
-window.enviarCorreo = async (folio, empresa, zona, sucursal, archivoData) => {
-
-    const { value: correoDestino } = await Swal.fire({
-        title: 'Enviar Solicitud',
-        input: 'email',
-        inputLabel: 'Correo destino',
-        inputPlaceholder: 'ejemplo@correo.com',
-        showCancelButton: true,
-        confirmButtonText: '📧 Enviar'
-    });
-
-    if (!correoDestino) return;
-
-    document.getElementById("loader").style.display = "flex";
-
-    try {
-
-        const templateParams = {
-            to_email: correoDestino,
-            folio: folio,
-            empresa: empresa,
-            zona: zona,
-            sucursal: sucursal,
-            message: "Favor de Cotizar lo descrito en el formato adjunto.",
-            archivo_adjunto: archivoData
-        };
-
-        await emailjs.send(
-            "service_maya4ogg",
-            "template_apg1whs",
-            templateParams
-        );
-
-        document.getElementById("loader").style.display = "none";
-
-        Swal.fire(
-            "Enviado",
-            "Correo enviado correctamente",
-            "success"
-        );
-
-    } catch (error) {
-
-        console.error(error);
-
-        document.getElementById("loader").style.display = "none";
-
-        Swal.fire(
-            "Error",
-            "No se pudo enviar el correo",
             "error"
         );
     }
