@@ -168,6 +168,33 @@
     };
 </script>
 <script type="module">
+    async function enviarCorreoConAdjunto({
+    destinatario,
+    asunto,
+    mensaje,
+    archivoBase64,
+    nombreArchivo
+}) {
+
+    const response = await fetch(
+        "https://us-central1-tu-proyecto.cloudfunctions.net/enviarCorreoSeguimiento",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                destinatario,
+                asunto,
+                mensaje,
+                archivoBase64,
+                nombreArchivo
+            })
+        }
+    );
+
+    return await response.json();
+}
     import { database, ref, push, set, get, onValue, update, remove } from "./firebase.js";
     const sesion = JSON.parse(localStorage.getItem("usuarioLogueado") || "{}");
     if(!sesion.usuario) location.href = "index.html";
@@ -714,6 +741,22 @@ if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
                 usuario: window.usuarioSesion, 
                 eliminado: false
             });
+            await enviarCorreoConAdjunto({
+    destinatario: "compras@empresa.com",
+    asunto: `Nueva R ${fol}`,
+    mensaje: `
+        <h2>Nueva Solicitud de Tecnología</h2>
+        <p><b>Folio:</b> ${fol}</p>
+        <p><b>Empresa:</b> ${emp}</p>
+        <p><b>Zona:</b> ${zon}</p>
+        <p><b>Sucursal:</b> ${suc}</p>
+        <p><b>Solicitante:</b> ${window.nombreSesion}</p>
+    `,
+
+    archivoBase64: reader.result,
+
+    nombreArchivo: arc.name
+});
             document.getElementById("formTec").reset();
             document.getElementById("preview-container").innerHTML = '<small class="text-muted">Vista previa</small>';
             document.getElementById("loader").style.display = "none";
