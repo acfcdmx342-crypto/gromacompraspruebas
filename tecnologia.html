@@ -224,7 +224,7 @@
     const nombreLimpio = encodeURIComponent(window.nombreSesion);
     const puestoLimpio = encodeURIComponent(window.puestoSesion);
     linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
-    linkTECH.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
+    linkTECH.href = `catalogos.html?tipo=cctvh&n=${nombreLimpio}&p=${puestoLimpio}`;
     
    if (window.esAdmin) {
         document.getElementById("liBase").innerHTML = '<a class="dropdown-item" href="base.html">🏠 Página Base</a>';
