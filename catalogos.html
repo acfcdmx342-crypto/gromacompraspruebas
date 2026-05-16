@@ -181,14 +181,21 @@
             store[path] = s.val() || {};
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('tipo') === 'cctv' && currentPath === '') {
-                    document.body.classList.add('hide-menu');
-                    render('formato_cctv');
-                } else if (currentPath === path) {
-                    render(path);
-                }
-            }
+            const urlParams = new URLSearchParams(window.location.search);
+const tipo = urlParams.get('tipo');
+
+if (currentPath === '') {
+
+    if (tipo === 'cctv') {
+        document.body.classList.add('hide-menu');
+        render('formato_cctv');
+    }
+
+    if (tipo === 'tech') {
+        document.body.classList.add('hide-menu');
+        render('formato_tech');
+    }
+}   
         });
     });
 
