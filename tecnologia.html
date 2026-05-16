@@ -220,11 +220,11 @@
     document.getElementById("puestoActivo").textContent = window.puestoSesion;
     document.getElementById("soporte").value = window.nombreSesion;
     const linkCCTV = document.getElementById("linkCCTV");
-    const link-formato_TECH = document.getElementById("link-formato_tech");
+    const linkFormatoTECH = document.getElementById("link-formato_tech");
     const nombreLimpio = encodeURIComponent(window.nombreSesion);
     const puestoLimpio = encodeURIComponent(window.puestoSesion);
     linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
-    link-formato_TECH.href = `catalogos.html?tipo=techh&n=${nombreLimpio}&p=${puestoLimpio}`;
+    linkFormatoTECH.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
     
    if (window.esAdmin) {
         document.getElementById("liBase").innerHTML = '<a class="dropdown-item" href="base.html">🏠 Página Base</a>';
