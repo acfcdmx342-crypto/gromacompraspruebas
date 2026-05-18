@@ -155,10 +155,11 @@
     </a>
 
 <!-- BOTÓN COMPUTADORA -->
-  <a id="btn-formato-tech" href="#" class="tech-link" onclick="render('formato_tech')">
+  <a id="btn-formato-tech" href="#" class="tech-link">
     <div class="tech-icon-container">
         <i class="fa-solid fa-computer"></i>
     </div>
+
     <span class="small mt-2">
         Requisición de Tecnología
     </span>
@@ -220,11 +221,11 @@
     document.getElementById("puestoActivo").textContent = window.puestoSesion;
     document.getElementById("soporte").value = window.nombreSesion;
     const linkCCTV = document.getElementById("linkCCTV");
-    const linkFormatoTECH = document.getElementById("link-formato_tech");
+    const linkFormatoTECH = document.getElementById("btn-formato-tech");
     const nombreLimpio = encodeURIComponent(window.nombreSesion);
     const puestoLimpio = encodeURIComponent(window.puestoSesion);
     linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
-    linkFormatoTECH.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
+   linkFormatoTECH.href =`catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
     
    if (window.esAdmin) {
         document.getElementById("liBase").innerHTML = '<a class="dropdown-item" href="base.html">🏠 Página Base</a>';
