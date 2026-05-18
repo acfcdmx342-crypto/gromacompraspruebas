@@ -146,8 +146,7 @@
                 <div id="preview-container"><small class="text-muted">Vista previa</small></div>
             </div>
             <div class="col-md-6 d-flex align-items-center justify-content-center gap-4 flex-wrap">
-
-    <!-- BOTÓN CCTV -->
+ <!-- BOTÓN CCTV -->
     <a id="linkCCTV" href="#" class="cctv-link">
         <div class="cctv-icon-container">
             <i class="fa-solid fa-video"></i>
@@ -155,14 +154,15 @@
         <span class="small mt-2">Requisición de CCTV</span>
     </a>
 
-    <!-- BOTÓN COMPUTADORA -->
-    <a id="link-formato_tech" href="#" class="tech-link">
-        <div class="tech-icon-container">
-            <i class="fa-solid fa-computer"></i>
-        </div>
-        <span class="small mt-2">Requisición de Tecnología </span>
-    </a>
-
+<!-- BOTÓN COMPUTADORA -->
+  <a id="btn-formato-tech" href="#" class="tech-link" onclick="render('formato_tech')">
+    <div class="tech-icon-container">
+        <i class="fa-solid fa-computer"></i>
+    </div>
+    <span class="small mt-2">
+        Requisición de Tecnología
+    </span>
+</a>
 </div>
             <div class="col-12 mt-4 text-center">
                 <button type="button" class="btn btn-primary btn-rounded px-5 shadow" onclick="guardarSolicitud()">💾 Guardar Solicitud</button>
