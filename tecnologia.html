@@ -220,11 +220,11 @@
     document.getElementById("puestoActivo").textContent = window.puestoSesion;
     document.getElementById("soporte").value = window.nombreSesion;
     const linkCCTV = document.getElementById("linkCCTV");
-    const link_Formatotech = document.getElementById("link-formato_tech");
+    const linkFormatoTECH = document.getElementById("link-formato_tech");
     const nombreLimpio = encodeURIComponent(window.nombreSesion);
     const puestoLimpio = encodeURIComponent(window.puestoSesion);
     linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
-    linkFormato_tech.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
+    linkFormatoTECH.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
     
    if (window.esAdmin) {
         document.getElementById("liBase").innerHTML = '<a class="dropdown-item" href="base.html">🏠 Página Base</a>';
@@ -1025,7 +1025,7 @@ window.actualizarFolio = async (idKey) => {
     window.cerrarSesion = () => { localStorage.clear(); location.href = "index.html"; };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+   
 
     
 </body>
