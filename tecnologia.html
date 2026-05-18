@@ -220,7 +220,7 @@
     document.getElementById("puestoActivo").textContent = window.puestoSesion;
     document.getElementById("soporte").value = window.nombreSesion;
     const linkCCTV = document.getElementById("linkCCTV");
-    const linkFormatoTECH = document.getElementById("link-formato_tech");
+    const link_Formatotech = document.getElementById("link-formato_tech");
     const nombreLimpio = encodeURIComponent(window.nombreSesion);
     const puestoLimpio = encodeURIComponent(window.puestoSesion);
     linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
