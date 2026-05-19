@@ -238,8 +238,10 @@ linkFormatoTECH.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLim
 const registrosPorPagina = 10;
     onValue(seguimientoRef, snap => {
     globalSeguimientos = [];
-    snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key }); });
-
+    snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key });
+    });
+renderTable();
+});    
 onValue(solicitudesRef, sSnap => {
     globalSolicitudes = [];
     sSnap.forEach(doc => { 
@@ -249,13 +251,13 @@ onValue(solicitudesRef, sSnap => {
     renderTable(sSnap);
 });
 });
-    function renderTable(snap) {
+    function renderTable() {
         const tbody = document.getElementById("tablaTecBody");
     tbody.innerHTML = "";
 
 let registros = [];
 
-snap.forEach(doc => {
+globalSolicitudes.forEach(s => {
 
     const s = doc.val();
 
@@ -850,10 +852,10 @@ if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
                         <tbody>${rows}</tbody>
                     </table>
                 </div>`, 
-            width: '800px' 
+            <div id="paginacion" class="d-flex justify-content-end align-items-center mt-3 gap-2"></div>
+        width: '800px' 
      });
     };
-<div id="paginacion" class="d-flex justify-content-end align-items-center mt-3 gap-2"></div>
     
     window.previewArchivo = (input) => {
         if(!input.files[0]) return;
