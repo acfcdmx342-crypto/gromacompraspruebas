@@ -180,15 +180,22 @@
         onValue(ref(db, path), (s) => {
             store[path] = s.val() || {};
             if (loadsPending > 0) loadsPending--;
-            if (loadsPending === 0) {
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('tipo') === 'cctv' && currentPath === '') {
-                    document.body.classList.add('hide-menu');
-                    render('formato_cctv');
-                } else if (currentPath === path) {
-                    render(path);
-                }
-            }
+       if (loadsPending === 0) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (currentPath === '') {
+        if (urlParams.get('tipo') === 'cctv') {
+            document.body.classList.add('hide-menu');
+            render('formato_cctv');
+        }
+        else if (urlParams.get('tipo') === 'tech') {
+            document.body.classList.add('hide-menu');
+            render('formato_tech');
+        }
+    }
+    else if (currentPath === path) {
+        render(path);
+    }
+}
         });
     });
 
@@ -197,8 +204,14 @@
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
         document.getElementById(`link-${path}`)?.classList.add('active');
         
-        if (path === 'formato_cctv') { renderFormato('CCTV'); return; }
-        if (path === 'formato_tech') { renderFormato('TECH'); return; }
+        if (path === 'formato_cctv') { 
+        renderFormato('CCTV');
+        return;
+        }
+        if (path === 'formato_tech') { 
+        renderFormato('TECH');
+        return; 
+        }
         
         const items = store[path];
         const keys = Object.keys(items);
