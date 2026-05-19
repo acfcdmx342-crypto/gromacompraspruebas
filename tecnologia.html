@@ -153,13 +153,11 @@
         </div>
         <span class="small mt-2">Requisición de CCTV</span>
     </a>
-
 <!-- BOTÓN COMPUTADORA -->
   <a id="btn-formato-tech" href="#" class="tech-link">
     <div class="tech-icon-container">
         <i class="fa-solid fa-computer"></i>
     </div>
-
     <span class="small mt-2">
         Requisición de Tecnología
     </span>
@@ -220,13 +218,13 @@
     document.getElementById("usuarioActivo").textContent = window.nombreSesion;
     document.getElementById("puestoActivo").textContent = window.puestoSesion;
     document.getElementById("soporte").value = window.nombreSesion;
-    const linkCCTV = document.getElementById("linkCCTV");
-    const linkFormatoTECH = document.getElementById("btn-formato-tech");
-    const nombreLimpio = encodeURIComponent(window.nombreSesion);
-    const puestoLimpio = encodeURIComponent(window.puestoSesion);
-    linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
-   linkFormatoTECH.href =`catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
-    
+const linkCCTV = document.getElementById("linkCCTV");
+const nombreLimpio = encodeURIComponent(window.nombreSesion);
+const puestoLimpio = encodeURIComponent(window.puestoSesion);
+linkCCTV.href = `catalogos.html?tipo=cctv&n=${nombreLimpio}&p=${puestoLimpio}`;
+const linkFormatoTECH = document.getElementById("btn-formato-tech");
+linkFormatoTECH.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLimpio}`;
+     
    if (window.esAdmin) {
         document.getElementById("liBase").innerHTML = '<a class="dropdown-item" href="base.html">🏠 Página Base</a>';
         document.getElementById("contenedorExportar").innerHTML = `<button class="btn btn-outline-success btn-sm fw-bold px-3" onclick="exportarExcel()">📊 Reporte</button>`;
