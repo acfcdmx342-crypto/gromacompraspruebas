@@ -184,6 +184,7 @@
                 <tbody id="tablaTecBody"></tbody>
             </table>
         </div>
+        <div id="paginacion" class="d-flex justify-content-end align-items-center mt-3 gap-2"></div>
     </div>
 </div>
 <script>
@@ -250,7 +251,6 @@ onValue(solicitudesRef, sSnap => {
     });
     renderTable(sSnap);
 });
-});
     function renderTable() {
         const tbody = document.getElementById("tablaTecBody");
     tbody.innerHTML = "";
@@ -258,16 +258,10 @@ onValue(solicitudesRef, sSnap => {
 let registros = [];
 
 globalSolicitudes.forEach(s => {
-
-    const s = doc.val();
-
-    if (s.eliminado) return;
-
     registros.push({
-        docKey: doc.key,
+        docKey: s.id,
         data: s
     });
-
 });
 
 registros.sort((a, b) =>
@@ -837,25 +831,24 @@ if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
             </tr>`;
         }).join('');
 
-        Swal.fire({ 
-            title: 'Historial ' + fol, 
-            html: `
-                <div class="table-responsive">
-                    <table class="table table-sm small">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Status</th>
-                                <th>Detalle</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>`, 
-            <div id="paginacion" class="d-flex justify-content-end align-items-center mt-3 gap-2"></div>
-        width: '800px' 
-     });
-    };
+       Swal.fire({ 
+    title: 'Historial ' + fol, 
+    html: `
+        <div class="table-responsive">
+            <table class="table table-sm small">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Status</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `,
+    width: '800px'
+});
     
     window.previewArchivo = (input) => {
         if(!input.files[0]) return;
