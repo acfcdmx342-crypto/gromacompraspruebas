@@ -184,7 +184,6 @@
                 <tbody id="tablaTecBody"></tbody>
             </table>
         </div>
-        <div id="paginacion" class="d-flex justify-content-end align-items-center mt-3 gap-2"></div>
     </div>
 </div>
 <script>
@@ -235,14 +234,10 @@ linkFormatoTECH.href = `catalogos.html?tipo=tech&n=${nombreLimpio}&p=${puestoLim
     const historialPermanenteRef = ref(database, "historial_permanente");
     let globalSeguimientos = [];
     let globalSolicitudes = [];
-    let paginaActual = 1;
-const registrosPorPagina = 10;
     onValue(seguimientoRef, snap => {
     globalSeguimientos = [];
-    snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key });
-    });
-renderTable();
-});    
+    snap.forEach(c => { globalSeguimientos.push({ ...c.val(), id: c.key }); });
+
 onValue(solicitudesRef, sSnap => {
     globalSolicitudes = [];
     sSnap.forEach(doc => { 
@@ -251,37 +246,12 @@ onValue(solicitudesRef, sSnap => {
     });
     renderTable(sSnap);
 });
-    function renderTable() {
-        const tbody = document.getElementById("tablaTecBody");
-    tbody.innerHTML = "";
-
-let registros = [];
-
-globalSolicitudes.forEach(s => {
-    registros.push({
-        docKey: s.id,
-        data: s
-    });
 });
-
-registros.sort((a, b) =>
-    new Date(b.data.fechaISO || b.data.fechaEnvio) -
-    new Date(a.data.fechaISO || a.data.fechaEnvio)
-);
-
-const inicio = (paginaActual - 1) * registrosPorPagina;
-const fin = inicio + registrosPorPagina;
-
-const registrosPaginados = registros.slice(inicio, fin);
-
-registrosPaginados.forEach(item => {
-
-    const doc = {
-        key: item.docKey,
-        val: () => item.data
-    };
-
-    const s = doc.val();
+    function renderTable(snap) {
+        const tbody = document.getElementById("tablaTecBody");
+        tbody.innerHTML = ""; 
+        snap.forEach(doc => {
+            const s = doc.val();
             if (s.eliminado) return;
             const segsFolio = globalSeguimientos.filter(x => x.folio === s.folio).sort((a,b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
             const statusActual = segsFolio.length > 0 ? segsFolio[0].status : (s.status || "PENDIENTE");
@@ -337,9 +307,7 @@ registrosPaginados.forEach(item => {
                 tbody.appendChild(tr);
             }
         });
-       renderPaginacion(registros.length);
-
-document.getElementById("loader").style.display = "none";
+        document.getElementById("loader").style.display = "none";
     }
 
     // --- FUNCIÓN EXPORTAR EXCEL ---
@@ -831,25 +799,25 @@ if(zonasBloqueadas.includes(zon.toUpperCase().trim())){
             </tr>`;
         }).join('');
 
-       Swal.fire({ 
-    title: 'Historial ' + fol, 
-    html: `
-        <div class="table-responsive">
-            <table class="table table-sm small">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Status</th>
-                        <th>Detalle</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>
-    `,
-    width: '800px'
-});
-    
+        Swal.fire({ 
+            title: 'Historial ' + fol, 
+            html: `
+                <div class="table-responsive">
+                    <table class="table table-sm small">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Status</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`, 
+            width: '800px' 
+        });
+    };
+
     window.previewArchivo = (input) => {
         if(!input.files[0]) return;
         const reader = new FileReader();
@@ -1052,51 +1020,6 @@ window.actualizarFolio = async (idKey) => {
         );
     }
 };
-function renderPaginacion(totalRegistros) {
-
-    const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);
-
-    const contenedor = document.getElementById("paginacion");
-
-    contenedor.innerHTML = `
-        <button 
-            class="btn btn-sm btn-outline-secondary"
-            ${paginaActual === 1 ? 'disabled' : ''}
-            onclick="cambiarPagina(-1)">
-            ◀
-        </button>
-
-        <span class="small fw-bold">
-            ${(paginaActual - 1) * registrosPorPagina + 1}
-            -
-            ${Math.min(paginaActual * registrosPorPagina, totalRegistros)}
-            de ${totalRegistros}
-        </span>
-
-        <button 
-            class="btn btn-sm btn-outline-secondary"
-            ${paginaActual === totalPaginas ? 'disabled' : ''}
-            onclick="cambiarPagina(1)">
-            ▶
-        </button>
-    `;
-}
-
-window.cambiarPagina = (direccion) => {
-
-    paginaActual += direccion;
-
-    renderTable({
-        forEach: (callback) => {
-            globalSolicitudes.forEach(item => {
-                callback({
-                    key: item.id,
-                    val: () => item
-                });
-            });
-        }
-    });
-};    
 // 👉 empieza el cierre de sesion    
     window.cerrarSesion = () => { localStorage.clear(); location.href = "index.html"; };
 </script>
