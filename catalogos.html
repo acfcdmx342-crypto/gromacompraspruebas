@@ -59,6 +59,9 @@
 
         .btn-remove-item { border: none; background: transparent; color: #dc3545; padding: 0; line-height: 1; transition: 0.2s; }
         .btn-remove-item:hover { transform: scale(1.2); }
+        .tree-level { border-left: 1px solid #e2e8f0; margin-left: 10px; padding-left: 16px; }
+        .tree-row { padding: 4px 0; }
+        .tree-muted { color: #94a3b8; font-size: 0.78rem; padding: 4px 0 8px 28px; }
 
         @media print {
             .no-print { display: none !important; }
@@ -584,6 +587,169 @@ window.openEmpresaModal = (userId) => {
 
     bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
 };
+
+    const cleanAsignacionId = (txt) => String(txt || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    const getAsignacionUsuario = () => {
+        const asignacion = store.usuarios[currentUserId]?.asignacionSucursales;
+        return Array.isArray(asignacion) ? asignacion : [];
+    };
+
+    const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
+
+    const getZonaAsignada = (empresa, zona) => {
+        const emp = getEmpresaAsignada(empresa);
+        return emp?.zonas?.find(z => z.zona === zona);
+    };
+
+    const buildAsignacionTree = () => {
+        const empresas = Object.values(store.empresas).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
+        if (!empresas.length) {
+            return '<div class="text-center text-muted py-4">No hay empresas registradas.</div>';
+        }
+
+        return empresas.map(emp => {
+            const empresa = emp.nombre || '';
+            const empId = `emp-${cleanAsignacionId(empresa)}`;
+            const empresaAsignada = getEmpresaAsignada(empresa);
+            const empresaChecked = empresaAsignada ? 'checked' : '';
+            const empresaVisible = empresaAsignada ? '' : 'd-none';
+            const zonas = Object.values(store.zonas)
+                .filter(z => z.empresa === empresa)
+                .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
+            const zonasHtml = zonas.length ? zonas.map(z => {
+                const zona = z.nombre || '';
+                const zonaId = `zona-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}`;
+                const zonaAsignada = getZonaAsignada(empresa, zona);
+                const zonaChecked = zonaAsignada ? 'checked' : '';
+                const zonaVisible = zonaAsignada ? '' : 'd-none';
+                const sucursalesSeleccionadas = zonaAsignada?.sucursales || [];
+                const sucursales = Object.values(store.sucursales)
+                    .filter(s => s.empresa === empresa && s.zona === zona)
+                    .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
+                const sucursalesHtml = sucursales.length ? sucursales.map(s => {
+                    const sucursal = s.nombre || '';
+                    const sucId = `suc-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}-${cleanAsignacionId(sucursal)}`;
+                    const sucChecked = sucursalesSeleccionadas.includes(sucursal) ? 'checked' : '';
+                    return `
+                        <div class="form-check tree-row">
+                            <input class="form-check-input suc-check" type="checkbox" value="${sucursal}" id="${sucId}" data-empresa="${empresa}" data-zona="${zona}" ${sucChecked}>
+                            <label class="form-check-label small" for="${sucId}">${sucursal}</label>
+                        </div>`;
+                }).join('') : '<div class="tree-muted">Sin sucursales registradas en esta zona.</div>';
+
+                return `
+                    <div class="mb-1">
+                        <div class="form-check tree-row">
+                            <input class="form-check-input zona-check" type="checkbox" value="${zona}" id="${zonaId}" data-empresa="${empresa}" ${zonaChecked}>
+                            <label class="form-check-label small fw-semibold" for="${zonaId}">${zona}</label>
+                        </div>
+                        <div class="tree-level sucursal-group ${zonaVisible}" data-empresa="${empresa}" data-zona="${zona}">
+                            ${sucursalesHtml}
+                        </div>
+                    </div>`;
+            }).join('') : '<div class="tree-muted">Sin zonas registradas para esta empresa.</div>';
+
+            return `
+                <div class="mb-2">
+                    <div class="form-check tree-row">
+                        <input class="form-check-input emp-check" type="checkbox" value="${empresa}" id="${empId}" ${empresaChecked}>
+                        <label class="form-check-label fw-semibold" for="${empId}">${empresa}</label>
+                    </div>
+                    <div class="tree-level zona-group ${empresaVisible}" data-empresa="${empresa}">
+                        ${zonasHtml}
+                    </div>
+                </div>`;
+        }).join('');
+    };
+
+window.openEmpresaModal = (userId) => {
+    currentUserId = userId;
+    document.getElementById("empresa-tree").innerHTML = buildAsignacionTree();
+    new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
+};
+
+    document.getElementById("empresa-tree").addEventListener("change", (e) => {
+        const target = e.target;
+
+        if (target.classList.contains("emp-check")) {
+            const empresa = target.value;
+            const grupoZonas = document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`);
+            grupoZonas?.classList.toggle("d-none", !target.checked);
+            if (!target.checked) {
+                grupoZonas?.querySelectorAll("input[type='checkbox']").forEach(chk => {
+                    chk.checked = false;
+                    if (chk.classList.contains("zona-check")) {
+                        document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(chk.value)}"]`)?.classList.add("d-none");
+                    }
+                });
+            }
+        }
+
+        if (target.classList.contains("zona-check")) {
+            const empresa = target.dataset.empresa;
+            const zona = target.value;
+            const grupoSucursales = document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
+            grupoSucursales?.classList.toggle("d-none", !target.checked);
+
+            if (target.checked) {
+                const empresaCheck = document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`);
+                empresaCheck.checked = true;
+                document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
+            } else {
+                grupoSucursales?.querySelectorAll(".suc-check").forEach(chk => chk.checked = false);
+            }
+        }
+
+        if (target.classList.contains("suc-check") && target.checked) {
+            const empresa = target.dataset.empresa;
+            const zona = target.dataset.zona;
+            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
+            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
+            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
+            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
+        }
+    });
+
+    window.guardarAsignacion = async () => {
+    if (!currentUserId) return;
+
+    const asignacionSucursales = [];
+
+    document.querySelectorAll(".emp-check:checked").forEach(empChk => {
+        const empresa = empChk.value;
+        const zonas = [];
+
+        document.querySelectorAll(`.zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`).forEach(zonaChk => {
+            const zona = zonaChk.value;
+            const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`))
+                .map(chk => chk.value);
+
+            zonas.push({ zona, sucursales });
+        });
+
+        asignacionSucursales.push({ empresa, zonas });
+    });
+
+    try {
+        await update(ref(db, `usuarios/${currentUserId}`), { asignacionSucursales });
+
+        Swal.fire({
+            icon: "success",
+            title: "Asignacion guardada",
+            text: "Se asignaron correctamente las sucursales",
+            timer: 1200,
+            showConfirmButton: false
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
+    } catch (e) {
+        Swal.fire("Error", e.message, "error");
+    }
+};
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -594,4 +760,3 @@ window.openEmpresaModal = (userId) => {
 </script>
 </body>
 </html>
-
