@@ -59,8 +59,12 @@
 
         .btn-remove-item { border: none; background: transparent; color: #dc3545; padding: 0; line-height: 1; transition: 0.2s; }
         .btn-remove-item:hover { transform: scale(1.2); }
+        #empresa-tree { padding-left: 28px; }
+        #empresa-tree .form-check { padding-left: 1.75rem; }
+        #empresa-tree .form-check-input { margin-left: -1.45rem; }
         .tree-level { border-left: 1px solid #e2e8f0; margin-left: 10px; padding-left: 16px; }
         .tree-row { padding: 4px 0; }
+        .tree-select-all { color: #0d6efd; font-weight: 600; }
         .tree-muted { color: #94a3b8; font-size: 0.78rem; padding: 4px 0 8px 28px; }
 
         @media print {
@@ -602,6 +606,22 @@ window.openEmpresaModal = (userId) => {
         return emp?.zonas?.find(z => z.zona === zona);
     };
 
+    const syncAllSucursalesCheck = (empresa, zona) => {
+        const allCheck = document.querySelector(`.all-suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
+        if (!allCheck) return;
+
+        const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`));
+        const seleccionadas = sucursales.filter(chk => chk.checked);
+        allCheck.checked = sucursales.length > 0 && seleccionadas.length === sucursales.length;
+        allCheck.indeterminate = seleccionadas.length > 0 && seleccionadas.length < sucursales.length;
+    };
+
+    const syncAllSucursalesChecks = () => {
+        document.querySelectorAll(".all-suc-check").forEach(chk => {
+            syncAllSucursalesCheck(chk.dataset.empresa, chk.dataset.zona);
+        });
+    };
+
     const buildAsignacionTree = () => {
         const empresas = Object.values(store.empresas).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
@@ -629,6 +649,9 @@ window.openEmpresaModal = (userId) => {
                 const sucursales = Object.values(store.sucursales)
                     .filter(s => s.empresa === empresa && s.zona === zona)
                     .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+                const allSucId = `all-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}`;
+                const todasSeleccionadas = sucursales.length > 0 && sucursales.every(s => sucursalesSeleccionadas.includes(s.nombre || ''));
+                const allSucChecked = todasSeleccionadas ? 'checked' : '';
 
                 const sucursalesHtml = sucursales.length ? sucursales.map(s => {
                     const sucursal = s.nombre || '';
@@ -640,6 +663,11 @@ window.openEmpresaModal = (userId) => {
                             <label class="form-check-label small" for="${sucId}">${sucursal}</label>
                         </div>`;
                 }).join('') : '<div class="tree-muted">Sin sucursales registradas en esta zona.</div>';
+                const seleccionarTodasHtml = sucursales.length ? `
+                    <div class="form-check tree-row">
+                        <input class="form-check-input all-suc-check" type="checkbox" id="${allSucId}" data-empresa="${empresa}" data-zona="${zona}" ${allSucChecked}>
+                        <label class="form-check-label small tree-select-all" for="${allSucId}">Seleccionar todas las sucursales</label>
+                    </div>` : '';
 
                 return `
                     <div class="mb-1">
@@ -648,6 +676,7 @@ window.openEmpresaModal = (userId) => {
                             <label class="form-check-label small fw-semibold" for="${zonaId}">${zona}</label>
                         </div>
                         <div class="tree-level sucursal-group ${zonaVisible}" data-empresa="${empresa}" data-zona="${zona}">
+                            ${seleccionarTodasHtml}
                             ${sucursalesHtml}
                         </div>
                     </div>`;
@@ -669,6 +698,7 @@ window.openEmpresaModal = (userId) => {
 window.openEmpresaModal = (userId) => {
     currentUserId = userId;
     document.getElementById("empresa-tree").innerHTML = buildAsignacionTree();
+    syncAllSucursalesChecks();
     new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
 };
 
@@ -682,6 +712,7 @@ window.openEmpresaModal = (userId) => {
             if (!target.checked) {
                 grupoZonas?.querySelectorAll("input[type='checkbox']").forEach(chk => {
                     chk.checked = false;
+                    chk.indeterminate = false;
                     if (chk.classList.contains("zona-check")) {
                         document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(chk.value)}"]`)?.classList.add("d-none");
                     }
@@ -700,8 +731,24 @@ window.openEmpresaModal = (userId) => {
                 empresaCheck.checked = true;
                 document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
             } else {
-                grupoSucursales?.querySelectorAll(".suc-check").forEach(chk => chk.checked = false);
+                grupoSucursales?.querySelectorAll(".suc-check, .all-suc-check").forEach(chk => {
+                    chk.checked = false;
+                    chk.indeterminate = false;
+                });
             }
+        }
+
+        if (target.classList.contains("all-suc-check")) {
+            const empresa = target.dataset.empresa;
+            const zona = target.dataset.zona;
+            const checked = target.checked;
+
+            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
+            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
+            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
+            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
+            document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`).forEach(chk => chk.checked = checked);
+            target.indeterminate = false;
         }
 
         if (target.classList.contains("suc-check") && target.checked) {
@@ -711,6 +758,10 @@ window.openEmpresaModal = (userId) => {
             document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
             document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
             document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
+        }
+
+        if (target.classList.contains("suc-check")) {
+            syncAllSucursalesCheck(target.dataset.empresa, target.dataset.zona);
         }
     });
 
